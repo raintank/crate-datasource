@@ -56,10 +56,10 @@ export class CrateDatasource {
       if (response.status === 200) {
         var cluster_name = response.data.cluster_name;
         var crate_version = response.data.version.number;
-        return { 
-          status: "success", 
-          message: "Cluster: " + cluster_name + ", version: " + crate_version, 
-          title: "Success" 
+        return {
+          status: "success",
+          message: "Cluster: " + cluster_name + ", version: " + crate_version,
+          title: "Success"
         };
       }
     });

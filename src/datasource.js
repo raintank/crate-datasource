@@ -1,4 +1,5 @@
-import _ from "lodash";
+import _ from 'lodash';
+import * as response_handler from './response_handler';
 
 export class CrateDatasource {
 
@@ -20,30 +21,7 @@ export class CrateDatasource {
       return this.q.when([]);
     }
 
-    return this.backendSrv.datasourceRequest({
-      url: this.url + '/_sql',
-      data: {
-        "stmt": query
-      },
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    }).then(response => {
-      var datapoints = _.map(response.data.rows, row => {
-        return [
-          Number(row[0]),
-          Number(row[1])
-        ];
-      });
-      console.log(response, datapoints);
-      return {
-        data: [
-          {
-            target: "crate_test",
-            datapoints: datapoints
-          }
-        ]
-      };
-    });
+    return this._sql_query(query).then(response_handler.handle_response);
   }
 
   // Required
@@ -61,6 +39,19 @@ export class CrateDatasource {
           message: "Cluster: " + cluster_name + ", version: " + crate_version,
           title: "Success"
         };
+      }
+    });
+  }
+
+  _sql_query(query) {
+    return this.backendSrv.datasourceRequest({
+      url: this.url + '/_sql',
+      data: {
+        "stmt": query
+      },
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
       }
     });
   }

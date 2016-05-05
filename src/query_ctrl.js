@@ -11,10 +11,6 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.$q = $q;
     this.uiSegmentSrv = uiSegmentSrv;
 
-    // TODO: remove later
-    // Set raw query mode by default
-    this.target.rawQuery = false;
-
     var target_defaults = {
       table: "default",
       selectColumns: ["*"],

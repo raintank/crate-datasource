@@ -4,10 +4,11 @@ import * as queryBuilder from './query_builder';
 
 export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
-  constructor($scope, $injector, uiSegmentSrv)  {
+  constructor($scope, $injector, $q, uiSegmentSrv)  {
     super($scope, $injector);
 
     this.scope = $scope;
+    this.$q = $q;
     this.uiSegmentSrv = uiSegmentSrv;
 
     // TODO: remove later
@@ -16,10 +17,17 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
     var target_defaults = {
       table: "default",
-      selectColumns: ["*"]
+      selectColumns: ["*"],
+      orderBy: "time",
+      orderType: "DESC"
     };
     _.defaults(this.target, target_defaults);
 
+    var orderTypes = ["ASC", "DESC"];
+
+    this.orderTypes = _.map(orderTypes, this.uiSegmentSrv.newSegment);
+    this.orderTypeSegment = this.uiSegmentSrv.newSegment(this.target.orderType);
+    this.orderBySegment = this.uiSegmentSrv.newSegment(this.target.orderBy);
     this.tableSegment = this.uiSegmentSrv.newSegment(this.target.table);
     this.selectColumnSegments = _.map(this.target.selectColumns, this.uiSegmentSrv.newSegment);
 
@@ -59,6 +67,12 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.buildQuery();
   }
 
+  orderByChanged() {
+    this.target.orderBy = this.orderBySegment.value;
+    this.target.orderType = this.orderTypeSegment.value;
+    this.buildQuery();
+  }
+
   toggleEditorMode() {
     this.target.rawQuery = !this.target.rawQuery;
   }
@@ -78,6 +92,15 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       .then(rows => {
         return self.transformToSegments(rows);
       });
+  }
+
+  getOrderByColumns() {
+    return this.$q.when(this.selectColumnSegments);
+  }
+
+  getOrderTypes() {
+    var orderTypes = ["ASC", "DESC"];
+    return this.$q.when(this.transformToSegments(orderTypes));
   }
 
   fixSelectColumnSegments() {

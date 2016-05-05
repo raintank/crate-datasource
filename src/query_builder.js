@@ -14,5 +14,6 @@ export function buildQuery(target) {
   var query = "SELECT ";
   query = query + target.selectColumns.join();
   query = query + " FROM " + target.table;
+  query = query + " ORDER BY " + target.orderBy + " " + target.orderType;
   return query;
 }

@@ -23,6 +23,7 @@
         <div class="gf-form-label gf-form-label--grow"></div>
       </div>
     </div>
+
     <div class="gf-form-inline">
       <div class="gf-form">
         <label class="gf-form-label query-keyword width-7">
@@ -33,6 +34,26 @@
         <metric-segment segment="segment"
           get-options="ctrl.getColumns()"
           on-change="ctrl.columnSegmentChanged(segment, $index)">
+        </metric-segment>
+      </div>
+      <div class="gf-form gf-form--grow">
+        <div class="gf-form-label gf-form-label--grow"></div>
+      </div>
+    </div>
+
+    <div class="gf-form-inline">
+      <div class="gf-form">
+        <label class="gf-form-label query-keyword width-7">ORDER BY</label>
+        <metric-segment segment="ctrl.orderBySegment"
+          get-options="ctrl.getOrderByColumns()"
+          on-change="ctrl.orderByChanged()">
+        </metric-segment>
+      </div>
+      <div class="gf-form">
+        <!-- ASC/DESC -->
+        <metric-segment segment="ctrl.orderTypeSegment"
+          get-options="ctrl.getOrderTypes()"
+          on-change="ctrl.orderByChanged()">
         </metric-segment>
       </div>
       <div class="gf-form gf-form--grow">

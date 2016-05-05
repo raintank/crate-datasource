@@ -8,3 +8,11 @@ export function getColumns(table) {
     table + "'";
   return query;
 }
+
+export function buildQuery(target) {
+  console.log(target.selectColumns);
+  var query = "SELECT ";
+  query = query + target.selectColumns.join();
+  query = query + " FROM " + target.table;
+  return query;
+}

@@ -21,7 +21,9 @@ export function buildQuery(target, timeFrom, timeTo) {
 
   // Add time range
   if (timeFrom || timeTo) {
-    query = query + " WHERE time > " + timeFrom + " AND time < " + timeTo;
+    var timeColumn = target.orderBy;
+    query = query + " WHERE " + timeColumn + " > " + timeFrom +
+      " AND " + timeColumn + " < " + timeTo;
   }
 
   query = query + " ORDER BY " + target.orderBy + " " + target.orderType;

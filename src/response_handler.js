@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-export function handle_response(response) {
+export function handle_response(target, response) {
   var datapoints = _.map(response.data.rows, row => {
     return [
       Number(row[0]),
@@ -9,11 +9,7 @@ export function handle_response(response) {
   });
 
   return {
-    data: [
-      {
-        target: "crate_test",
-        datapoints: datapoints
-      }
-    ]
+    target: target.table,
+    datapoints: datapoints
   };
 }

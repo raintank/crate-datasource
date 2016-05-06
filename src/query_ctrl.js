@@ -15,7 +15,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       table: "default",
       selectColumns: ["*"],
       orderBy: "time",
-      orderType: "DESC"
+      orderType: "ASC"
     };
     _.defaults(this.target, target_defaults);
 

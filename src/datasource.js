@@ -1,4 +1,6 @@
 import _ from 'lodash';
+import * as dateMath from 'app/core/utils/datemath';
+import * as queryBuilder from './query_builder';
 import * as response_handler from './response_handler';
 
 export class CrateDatasource {
@@ -7,21 +9,31 @@ export class CrateDatasource {
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
     this.name = instanceSettings.name;
-    this.q = $q;
+    this.$q = $q;
     this.backendSrv = backendSrv;
   }
 
   // Called once per panel (graph)
   query(options) {
-    var query = _.find(options.targets, target => {
-      return target.query !== '';
-    }).query;
+    var timeFrom = Math.ceil(dateMath.parse(options.range.from));
+    var timeTo = Math.ceil(dateMath.parse(options.range.to));
 
-    if (query.length <= 0) {
-      return this.q.when([]);
-    }
-
-    return this._sql_query(query).then(response_handler.handle_response);
+    var queries = _.map(options.targets, target => {
+      if (target.hide || target.query === '') {
+        return [];
+      } else {
+        //var timeQuery = queryBuilder.addTimeRange(target.query, timeFrom, timeTo);
+        return this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo))
+          .then(response => {
+            return response_handler.handle_response(target, response);
+          });
+      }
+    });
+    return this.$q.all(_.flatten(queries)).then(result => {
+      return {
+        data: result
+      };
+    });
   }
 
   // Required

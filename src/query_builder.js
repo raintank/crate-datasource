@@ -9,11 +9,21 @@ export function getColumns(table) {
   return query;
 }
 
-export function buildQuery(target) {
+export function addTimeRange(query, timeFrom, timeTo) {
+  return query + " WHERE time > " + timeFrom + " AND time < " + timeTo;
+}
+
+export function buildQuery(target, timeFrom, timeTo) {
   console.log(target.selectColumns);
   var query = "SELECT ";
   query = query + target.selectColumns.join();
   query = query + " FROM " + target.table;
+
+  // Add time range
+  if (timeFrom || timeTo) {
+    query = query + " WHERE time > " + timeFrom + " AND time < " + timeTo;
+  }
+
   query = query + " ORDER BY " + target.orderBy + " " + target.orderType;
   return query;
 }

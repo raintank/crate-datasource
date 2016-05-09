@@ -41,14 +41,16 @@ export function buildQuery(target, timeFrom, timeTo) {
   query = query + " FROM " + target.table;
 
   // WHERE
-  if (target.whereClauses) {
-    query += renderWhereClauses(target.whereClauses);
+  if (target.whereClauses && target.whereClauses.length) {
+    query += " WHERE" + renderWhereClauses(target.whereClauses);
   }
 
   // Add time range
   if (timeFrom || timeTo) {
     if (!target.whereClauses || target.whereClauses.length === 0) {
       query += " WHERE ";
+    } else {
+      query += " AND ";
     }
     var timeColumn = target.orderBy;
     query += timeColumn + " > " + timeFrom +

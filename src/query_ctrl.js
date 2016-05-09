@@ -157,10 +157,38 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       }
     }
 
-    _.map(this.whereSegments, (segment, index) => {
-      return segment.value;
-    });
+    this.buildWhereClauses();
 
+    // Refresh only if all fields setted
+    if (_.every(this.whereSegments, segment => {
+      return ((segment.value || segment.type === 'plus-button') &&
+              !(segment.fake && segment.type !== 'plus-button'));
+    })) {
+      this.panelCtrl.refresh();
+    }
+  }
+
+  buildWhereClauses() {
+    var i = 0;
+    var whereIndex = 0;
+    var segments = this.whereSegments;
+    var whereClauses = this.target.whereClauses;
+    while (segments.length > i && segments[i].type !== 'plus-button') {
+      if (whereClauses.length < whereIndex + 1) {
+        whereClauses.push({condition: '', left: '', operator: '', right: ''});
+      }
+      if (segments[i].type === 'condition') {
+        whereClauses[whereIndex].condition = segments[i].value;
+      } else if (segments[i].type === 'key') {
+        whereClauses[whereIndex].left = segments[i].value;
+      } else if (segments[i].type === 'operator') {
+        whereClauses[whereIndex].operator = segments[i].value;
+      } else if (segments[i].type === 'value') {
+        whereClauses[whereIndex].right = segments[i].value;
+        whereIndex++;
+      }
+      i++;
+    }
   }
 
   getOrderByColumns() {

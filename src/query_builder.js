@@ -29,7 +29,8 @@ function renderWhereClauses(whereClauses) {
     if (index !== 0) {
       rendered += ' ' + clauseObj.condition;
     }
-    rendered += ' ' + clauseObj.left + ' ' + clauseObj.operator + ' ' + clauseObj.right;
+    var right = _.isNumber(clauseObj.right) ? Number(clauseObj.right) : "'" + clauseObj.right + "'";
+    rendered += ' ' + clauseObj.left + ' ' + clauseObj.operator + ' ' + right;
     return rendered;
   });
   return renderedClauses.join(' ');

@@ -114,7 +114,8 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     var self = this;
     return this.crateQuery(queryBuilder.getValues(this.tableSegment.value, column, limit))
       .then(rows => {
-        return self.transformToSegments(rows);
+        var uniqRows = _.uniq(_.flatten(rows));
+        return self.transformToSegments(uniqRows);
       });
   }
 

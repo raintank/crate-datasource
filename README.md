@@ -1,4 +1,4 @@
-## What makes a good README?
+## Grafana 3.0 Data Source plugin for Crate.io (preview)
 The following is the recommended format for the READMEs appearing on Grafana.net. 
 
 #### Screenshots

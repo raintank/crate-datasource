@@ -22,7 +22,6 @@ export class CrateDatasource {
       if (target.hide || target.query === '') {
         return [];
       } else {
-        //var timeQuery = queryBuilder.addTimeRange(target.query, timeFrom, timeTo);
         return this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo))
           .then(response => {
             return response_handler.handle_response(target, response);

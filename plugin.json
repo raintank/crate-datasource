@@ -1,6 +1,6 @@
 {
   "name": "Crate",
-  "id": "grafana-crate-datasource",
+  "id": "crate-datasource",
   "type": "datasource",
 
   "staticRoot": ".",
@@ -15,8 +15,8 @@
   "info": {
     "description": "Crate SQL Database datasource",
     "author": {
-      "name": "Raintank Inc.",
-      "url": "http://raintank.io"
+      "name": "Crate.IO",
+      "url": "http://crate.io"
     },
     "logos": {
       "small": "src/img/crate_logo.png",

@@ -19,15 +19,15 @@
       "url": "http://raintank.io"
     },
     "logos": {
-      "small": "src/img/crate_logo.svg",
-      "large": "src/img/crate_logo.svg"
+      "small": "src/img/crate_logo.png",
+      "large": "src/img/crate_logo.png"
     },
     "links": [
       {"name": "GitHub", "url": "https://github.com/raintank/crate-datasource"},
       {"name": "MIT License", "url": "https://github.com/raintank/crate-datasource/blob/master/LICENSE"}
     ],
     "version": "0.0.1",
-    "updated": "2016-05-03"
+    "updated": "2016-05-16"
   },
 
   "dependencies": {

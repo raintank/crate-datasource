@@ -23,22 +23,40 @@ System.register(["lodash"], function (_export, _context) {
       _ = _lodash.default;
     }],
     execute: function () {
-      function getTables() {
-        var query = "SELECT table_name FROM information_schema.tables";
+      function getSchemas() {
+        var query = "SELECT DISTINCT schema_name \
+               FROM information_schema.tables \
+               WHERE schema_name NOT IN ('information_schema', 'blob', 'sys') \
+               ORDER BY 1";
+        return query;
+      }
+
+      _export("getSchemas", getSchemas);
+
+      function getTables(schema) {
+        var query = "SELECT table_name \
+               FROM information_schema.tables \
+               WHERE schema_name='" + schema + "' \
+               ORDER BY 1";
         return query;
       }
 
       _export("getTables", getTables);
 
-      function getColumns(table) {
-        var query = "SELECT column_name FROM information_schema.columns WHERE table_name='" + table + "'";
+      function getColumns(schema, table) {
+        var query = "SELECT column_name \
+               FROM information_schema.columns \
+               WHERE schema_name='" + schema + "' \
+                 AND table_name='" + table + "' \
+               ORDER BY 1";
         return query;
       }
 
       _export("getColumns", getColumns);
 
-      function getValues(table, column, limit) {
-        var query = "SELECT " + column + " FROM " + table;
+      function getValues(schema, table, column, limit) {
+        var query = "SELECT " + column + " \
+               FROM \"" + schema + "\".\"" + table + "\"";
         if (limit) {
           query += " LIMIT " + limit;
         }
@@ -55,7 +73,7 @@ System.register(["lodash"], function (_export, _context) {
       function buildQuery(target, timeFrom, timeTo) {
         var query = "SELECT ";
         query = query + target.selectColumns.join();
-        query = query + " FROM " + target.table;
+        query = query + " FROM \"" + target.schema + "\".\"" + target.table + "\"";
 
         // WHERE
         if (target.whereClauses && target.whereClauses.length) {

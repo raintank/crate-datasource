@@ -82,6 +82,7 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
           };
 
           var target_defaults = {
+            schema: "doc",
             table: "default",
             selectColumns: ["*"],
             whereClauses: [],
@@ -95,6 +96,7 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
           _this.orderTypes = _.map(orderTypes, _this.uiSegmentSrv.newSegment);
           _this.orderTypeSegment = _this.uiSegmentSrv.newSegment(_this.target.orderType);
           _this.orderBySegment = _this.uiSegmentSrv.newSegment(_this.target.orderBy);
+          _this.schemaSegment = _this.uiSegmentSrv.newSegment(_this.target.schema);
           _this.tableSegment = _this.uiSegmentSrv.newSegment(_this.target.table);
           _this.selectColumnSegments = _.map(_this.target.selectColumns, _this.uiSegmentSrv.newSegment);
 
@@ -135,6 +137,12 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             this.panelCtrl.refresh(); // Asks the panel to refresh data.
           }
         }, {
+          key: 'schemaChanged',
+          value: function schemaChanged() {
+            this.target.schema = this.schemaSegment.value;
+            this.buildQuery();
+          }
+        }, {
           key: 'tableChanged',
           value: function tableChanged() {
             this.target.table = this.tableSegment.value;
@@ -165,10 +173,18 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             this.target.rawQuery = !this.target.rawQuery;
           }
         }, {
+          key: 'getSchemas',
+          value: function getSchemas() {
+            var self = this;
+            return this.crateQuery(queryBuilder.getSchemas()).then(function (rows) {
+              return self.transformToSegments(rows);
+            });
+          }
+        }, {
           key: 'getTables',
           value: function getTables() {
             var self = this;
-            return this.crateQuery(queryBuilder.getTables()).then(function (rows) {
+            return this.crateQuery(queryBuilder.getTables(this.schemaSegment.value)).then(function (rows) {
               return self.transformToSegments(rows);
             });
           }
@@ -176,7 +192,7 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
           key: 'getColumns',
           value: function getColumns() {
             var self = this;
-            return this.crateQuery(queryBuilder.getColumns(this.tableSegment.value)).then(function (rows) {
+            return this.crateQuery(queryBuilder.getColumns(this.schemaSegment.value, this.tableSegment.value)).then(function (rows) {
               return self.transformToSegments(rows);
             });
           }
@@ -186,7 +202,7 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             var limit = arguments.length <= 1 || arguments[1] === undefined ? 10 : arguments[1];
 
             var self = this;
-            return this.crateQuery(queryBuilder.getValues(this.tableSegment.value, column, limit)).then(function (rows) {
+            return this.crateQuery(queryBuilder.getValues(this.schemaSegment.value, this.tableSegment.value, column, limit)).then(function (rows) {
               var uniqRows = _.uniq(_.flatten(rows));
               return self.transformToSegments(uniqRows);
             });

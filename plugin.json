@@ -16,7 +16,7 @@
     "description": "Crate SQL Database datasource",
     "author": {
       "name": "Crate.IO",
-      "url": "http://crate.io"
+      "url": "https://crate.io"
     },
     "logos": {
       "small": "img/crate_logo.png",

@@ -1,6 +1,8 @@
 'use strict';
 
 System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], function (_export, _context) {
+  "use strict";
+
   var angular, _, QueryCtrl, queryBuilder, _createClass, CrateDatasourceQueryCtrl;
 
   function _classCallCheck(instance, Constructor) {

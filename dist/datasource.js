@@ -1,6 +1,8 @@
 'use strict';
 
 System.register(['lodash', 'app/core/utils/datemath', './query_builder', './response_handler'], function (_export, _context) {
+  "use strict";
+
   var _, dateMath, queryBuilder, response_handler, _createClass, CrateDatasource;
 
   function _classCallCheck(instance, Constructor) {

@@ -1,6 +1,6 @@
 {
   "name": "Crate",
-  "id": "grafana-crate-datasource",
+  "id": "crate-datasource",
   "type": "datasource",
 
   "staticRoot": ".",
@@ -15,19 +15,19 @@
   "info": {
     "description": "Crate SQL Database datasource",
     "author": {
-      "name": "Raintank Inc.",
-      "url": "http://raintank.io"
+      "name": "Crate.IO",
+      "url": "http://crate.io"
     },
     "logos": {
-      "small": "src/img/crate_logo.svg",
-      "large": "src/img/crate_logo.svg"
+      "small": "src/img/crate_logo.png",
+      "large": "src/img/crate_logo.png"
     },
     "links": [
       {"name": "GitHub", "url": "https://github.com/raintank/crate-datasource"},
       {"name": "MIT License", "url": "https://github.com/raintank/crate-datasource/blob/master/LICENSE"}
     ],
     "version": "0.0.1",
-    "updated": "2016-05-03"
+    "updated": "2016-05-16"
   },
 
   "dependencies": {

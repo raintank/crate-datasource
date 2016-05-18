@@ -83,6 +83,7 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             schema: "doc",
             table: "default",
             selectColumns: ["*"],
+            groupBy: "",
             whereClauses: [],
             orderBy: "time",
             orderType: "ASC"
@@ -97,6 +98,7 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
           _this.schemaSegment = _this.uiSegmentSrv.newSegment(_this.target.schema);
           _this.tableSegment = _this.uiSegmentSrv.newSegment(_this.target.table);
           _this.selectColumnSegments = _.map(_this.target.selectColumns, _this.uiSegmentSrv.newSegment);
+          _this.groupBySegment = _this.uiSegmentSrv.newSegment(_this.target.groupBy);
 
           // Build WHERE segments
           _this.whereSegments = [];
@@ -157,6 +159,12 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             this.target.selectColumns = _.map(_.filter(this.selectColumnSegments, function (segment) {
               return segment.type !== 'plus-button';
             }), 'value');
+            this.buildQuery();
+          }
+        }, {
+          key: 'groupBySegmentChanged',
+          value: function groupBySegmentChanged() {
+            this.target.groupBy = this.groupBySegment.value;
             this.buildQuery();
           }
         }, {

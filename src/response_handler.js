@@ -12,15 +12,35 @@ export function handle_response(target, response) {
     valueColumnIndex = 0;
   }
 
-  var datapoints = _.map(response.data.rows, row => {
-    return [
-      Number(row[valueColumnIndex]), // value
-      Number(row[timeColumnIndex])  // timestamp
-    ];
-  });
+  if (target.groupBy) {
+    var groupByColumnIndex = _.indexOf(response.data.cols, target.groupBy)
+    var groupedResponse = _.groupBy(response.data.rows, row => {
+      return row[groupByColumnIndex];
+    });
+    var datasets = _.map(groupedResponse, (rows, key) => {
+      var datapoints = _.map(rows, row => {
+        return [
+          Number(row[valueColumnIndex]), // value
+          Number(row[timeColumnIndex])  // timestamp
+        ];
+      });
+      return {
+        target: key,
+        datapoints: datapoints
+      };
+    });
+    return datasets;
+  } else {
+    var datapoints = _.map(response.data.rows, row => {
+      return [
+        Number(row[valueColumnIndex]), // value
+        Number(row[timeColumnIndex])  // timestamp
+      ];
+    });
 
-  return {
-    target: target.table,
-    datapoints: datapoints
-  };
+    return {
+      target: target.table,
+      datapoints: datapoints
+    };
+  }
 }

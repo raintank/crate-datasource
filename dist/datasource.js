@@ -77,7 +77,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
             });
             return this.$q.all(_.flatten(queries)).then(function (result) {
               return {
-                data: result
+                data: _.flatten(result)
               };
             });
           }

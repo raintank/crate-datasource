@@ -37,7 +37,7 @@ export class CrateDatasource {
     });
     return this.$q.all(_.flatten(queries)).then(result => {
       return {
-        data: result
+        data: _.flatten(result)
       };
     });
   }

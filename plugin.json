@@ -16,11 +16,11 @@
     "description": "Crate SQL Database datasource",
     "author": {
       "name": "Crate.IO",
-      "url": "http://crate.io"
+      "url": "https://crate.io"
     },
     "logos": {
-      "small": "src/img/crate_logo.png",
-      "large": "src/img/crate_logo.png"
+      "small": "img/crate_logo.png",
+      "large": "img/crate_logo.png"
     },
     "links": [
       {"name": "GitHub", "url": "https://github.com/raintank/crate-datasource"},

@@ -1,18 +1,38 @@
 import _ from 'lodash';
 
-export function getTables() {
-  var query = "SELECT table_name FROM information_schema.tables";
+export function getSchemas() {
+  var query = "SELECT DISTINCT schema_name \
+               FROM information_schema.tables \
+               WHERE schema_name NOT IN ('information_schema', 'blob', 'sys') \
+               ORDER BY 1";
   return query;
 }
 
-export function getColumns(table) {
-  var query = "SELECT column_name FROM information_schema.columns WHERE table_name='" +
-    table + "'";
+export function getTables(schema) {
+  var query = "SELECT table_name \
+               FROM information_schema.tables \
+               WHERE schema_name='" + schema + "' \
+               ORDER BY 1";
   return query;
 }
 
+<<<<<<< HEAD
 export function getValues(table, column, limit) {
   var query = "SELECT DISTINCT " + column + " FROM " + table;
+=======
+export function getColumns(schema, table) {
+  var query = "SELECT column_name \
+               FROM information_schema.columns \
+               WHERE schema_name='" + schema + "' \
+                 AND table_name='" + table + "' \
+               ORDER BY 1";
+  return query;
+}
+
+export function getValues(schema, table, column, limit) {
+  var query = "SELECT " + column + " \
+               FROM \"" + schema + "\".\"" + table + "\"";
+>>>>>>> 6c83501f52a51170a67519abaccf5963159e60ab
   if (limit) {
     query += " LIMIT " + limit;
   }
@@ -39,7 +59,7 @@ function renderWhereClauses(whereClauses) {
 export function buildQuery(target, timeFrom, timeTo) {
   var query = "SELECT ";
   query = query + target.selectColumns.join();
-  query = query + " FROM " + target.table;
+  query = query + " FROM \"" + target.schema + "\".\"" + target.table + "\"";
 
   // WHERE
   if (target.whereClauses && target.whereClauses.length) {

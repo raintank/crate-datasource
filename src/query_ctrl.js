@@ -18,6 +18,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     };
 
     var target_defaults = {
+      schema: "doc",
       table: "default",
       selectColumns: ["*"],
       whereClauses: [],
@@ -31,6 +32,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.orderTypes = _.map(orderTypes, this.uiSegmentSrv.newSegment);
     this.orderTypeSegment = this.uiSegmentSrv.newSegment(this.target.orderType);
     this.orderBySegment = this.uiSegmentSrv.newSegment(this.target.orderBy);
+    this.schemaSegment = this.uiSegmentSrv.newSegment(this.target.schema);
     this.tableSegment = this.uiSegmentSrv.newSegment(this.target.table);
     this.selectColumnSegments = _.map(this.target.selectColumns, this.uiSegmentSrv.newSegment);
 
@@ -68,6 +70,11 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 
+  schemaChanged() {
+    this.target.schema = this.schemaSegment.value;
+    this.buildQuery();
+  }
+
   tableChanged() {
     this.target.table = this.tableSegment.value;
     this.buildQuery();
@@ -95,9 +102,17 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   }
 
   // Query suggestions
+  getSchemas() {
+    var self = this;
+    return this.crateQuery(queryBuilder.getSchemas())
+      .then(rows => {
+        return self.transformToSegments(rows);
+      });
+  }
+
   getTables() {
     var self = this;
-    return this.crateQuery(queryBuilder.getTables())
+    return this.crateQuery(queryBuilder.getTables(this.schemaSegment.value))
       .then(rows => {
         return self.transformToSegments(rows);
       });
@@ -105,7 +120,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
   getColumns() {
     var self = this;
-    return this.crateQuery(queryBuilder.getColumns(this.tableSegment.value))
+    return this.crateQuery(queryBuilder.getColumns(this.schemaSegment.value, this.tableSegment.value))
       .then(rows => {
         return self.transformToSegments(rows);
       });
@@ -113,7 +128,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
   getValues(column, limit=10) {
     var self = this;
-    return this.crateQuery(queryBuilder.getValues(this.tableSegment.value, column, limit))
+    return this.crateQuery(queryBuilder.getValues(this.schemaSegment.value, this.tableSegment.value, column, limit))
       .then(rows => {
         var uniqRows = _.uniq(_.flatten(rows));
         return self.transformToSegments(uniqRows);

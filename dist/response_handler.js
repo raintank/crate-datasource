@@ -21,7 +21,7 @@ System.register(['lodash'], function (_export, _context) {
         }
 
         var groupByColumnIndex = _.indexOf(response.data.cols, target.groupBy);
-        if (target.groupBy && groupByColumnIndex !== -1) {
+        if (target.groupBy && target.groupBy !== '*' && groupByColumnIndex !== -1) {
           var groupedResponse = _.groupBy(response.data.rows, function (row) {
             return row[groupByColumnIndex];
           });

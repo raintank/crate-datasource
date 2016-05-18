@@ -21,7 +21,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       schema: "doc",
       table: "default",
       selectColumns: ["*"],
-      groupBy: "",
+      groupBy: "*",
       whereClauses: [],
       orderBy: "time",
       orderType: "ASC"

@@ -13,7 +13,7 @@ export function handle_response(target, response) {
   }
 
   var groupByColumnIndex = _.indexOf(response.data.cols, target.groupBy);
-  if (target.groupBy && groupByColumnIndex !== -1) {
+  if (target.groupBy && target.groupBy !== '*' && groupByColumnIndex !== -1) {
     var groupedResponse = _.groupBy(response.data.rows, row => {
       return row[groupByColumnIndex];
     });

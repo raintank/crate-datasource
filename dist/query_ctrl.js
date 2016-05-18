@@ -83,7 +83,7 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             schema: "doc",
             table: "default",
             selectColumns: ["*"],
-            groupBy: "",
+            groupBy: "*",
             whereClauses: [],
             orderBy: "time",
             orderType: "ASC"

@@ -20,8 +20,8 @@ System.register(['lodash'], function (_export, _context) {
           valueColumnIndex = 0;
         }
 
-        if (target.groupBy) {
-          var groupByColumnIndex = _.indexOf(response.data.cols, target.groupBy);
+        var groupByColumnIndex = _.indexOf(response.data.cols, target.groupBy);
+        if (target.groupBy && groupByColumnIndex !== -1) {
           var groupedResponse = _.groupBy(response.data.rows, function (row) {
             return row[groupByColumnIndex];
           });
@@ -44,10 +44,10 @@ System.register(['lodash'], function (_export, _context) {
             ];
           });
 
-          return {
+          return [{
             target: target.table,
             datapoints: datapoints
-          };
+          }];
         }
       }
 

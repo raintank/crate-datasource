@@ -19,13 +19,20 @@ export class CrateDatasource {
     var timeTo = Math.ceil(dateMath.parse(options.range.to));
 
     var queries = _.map(options.targets, target => {
-      if (target.hide || target.query === '') {
+      if (target.hide || (target.rawQuery && !target.query)) {
         return [];
       } else {
-        return this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo))
-          .then(response => {
-            return response_handler.handle_response(target, response);
-          });
+        if (target.rawQuery) {
+          return this._sql_query(target.query)
+            .then(response => {
+              return response_handler.handle_response(target, response);
+            });
+        } else {
+          return this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo))
+            .then(response => {
+              return response_handler.handle_response(target, response);
+            });
+        }
       }
     });
     return this.$q.all(_.flatten(queries)).then(result => {

@@ -61,12 +61,18 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
             var timeTo = Math.ceil(dateMath.parse(options.range.to));
 
             var queries = _.map(options.targets, function (target) {
-              if (target.hide || target.query === '') {
+              if (target.hide || target.rawQuery && !target.query) {
                 return [];
               } else {
-                return _this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo)).then(function (response) {
-                  return response_handler.handle_response(target, response);
-                });
+                if (target.rawQuery) {
+                  return _this._sql_query(target.query).then(function (response) {
+                    return response_handler.handle_response(target, response);
+                  });
+                } else {
+                  return _this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo)).then(function (response) {
+                    return response_handler.handle_response(target, response);
+                  });
+                }
               }
             });
             return this.$q.all(_.flatten(queries)).then(function (result) {

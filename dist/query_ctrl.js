@@ -98,13 +98,14 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
 
           // Build WHERE segments
           _this.whereSegments = [];
+          var self = _this;
           _.forEach(_this.target.whereClauses, function (whereClause) {
             if (whereClause.condition) {
-              _this.whereSegments.push(uiSegmentSrv.newCondition(whereClause.condition));
+              self.whereSegments.push(uiSegmentSrv.newCondition(whereClause.condition));
             }
-            _this.whereSegments.push(uiSegmentSrv.newSegment(whereClause.left));
-            _this.whereSegments.push(uiSegmentSrv.newOperator(whereClause.operator));
-            _this.whereSegments.push(uiSegmentSrv.newKeyValue(whereClause.right));
+            self.whereSegments.push(uiSegmentSrv.newKey(whereClause.left));
+            self.whereSegments.push(uiSegmentSrv.newOperator(whereClause.operator));
+            self.whereSegments.push(uiSegmentSrv.newKeyValue(whereClause.right));
           });
 
           _this.fixSelectColumnSegments();

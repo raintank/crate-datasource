@@ -36,13 +36,14 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
     // Build WHERE segments
     this.whereSegments = [];
+    var self = this;
     _.forEach(this.target.whereClauses, whereClause => {
       if (whereClause.condition) {
-        this.whereSegments.push(uiSegmentSrv.newCondition(whereClause.condition));
+        self.whereSegments.push(uiSegmentSrv.newCondition(whereClause.condition));
       }
-      this.whereSegments.push(uiSegmentSrv.newSegment(whereClause.left));
-      this.whereSegments.push(uiSegmentSrv.newOperator(whereClause.operator));
-      this.whereSegments.push(uiSegmentSrv.newKeyValue(whereClause.right));
+      self.whereSegments.push(uiSegmentSrv.newKey(whereClause.left));
+      self.whereSegments.push(uiSegmentSrv.newOperator(whereClause.operator));
+      self.whereSegments.push(uiSegmentSrv.newKeyValue(whereClause.right));
     });
 
     this.fixSelectColumnSegments();

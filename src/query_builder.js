@@ -12,7 +12,7 @@ export function getColumns(table) {
 }
 
 export function getValues(table, column, limit) {
-  var query = "SELECT " + column + " FROM " + table;
+  var query = "SELECT DISTINCT " + column + " FROM " + table;
   if (limit) {
     query += " LIMIT " + limit;
   }

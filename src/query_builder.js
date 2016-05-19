@@ -51,7 +51,7 @@ function renderWhereClauses(whereClauses) {
   return renderedClauses.join(' ');
 }
 
-export function buildQuery(target, timeFrom, timeTo) {
+export function buildQuery(target, addTimeRange) {
   var query = "SELECT ";
   query = query + target.selectColumns.join();
   query = query + " FROM \"" + target.schema + "\".\"" + target.table + "\"";
@@ -62,15 +62,14 @@ export function buildQuery(target, timeFrom, timeTo) {
   }
 
   // Add time range
-  if (timeFrom || timeTo) {
+  if (addTimeRange) {
     if (!target.whereClauses || target.whereClauses.length === 0) {
       query += " WHERE ";
     } else {
       query += " AND ";
     }
     var timeColumn = target.orderBy;
-    query += timeColumn + " > " + timeFrom +
-      " AND " + timeColumn + " < " + timeTo;
+    query += timeColumn + " >= ? AND " + timeColumn + " <= ?";
   }
 
   // ORDER BY

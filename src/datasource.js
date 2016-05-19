@@ -23,12 +23,12 @@ export class CrateDatasource {
         return [];
       } else {
         if (target.rawQuery) {
-          return this._sql_query(target.query)
+          return this._sql_query(target.query, [timeFrom, timeTo])
             .then(response => {
               return response_handler.handle_response(target, response);
             });
         } else {
-          return this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo))
+          return this._sql_query(queryBuilder.buildQuery(target, true), [timeFrom, timeTo])
             .then(response => {
               return response_handler.handle_response(target, response);
             });
@@ -61,11 +61,12 @@ export class CrateDatasource {
     });
   }
 
-  _sql_query(query) {
+  _sql_query(query, args=[]) {
     return this.backendSrv.datasourceRequest({
       url: this.url + '/_sql',
       data: {
-        "stmt": query
+        "stmt": query,
+        "args": args
       },
       method: 'POST',
       headers: {

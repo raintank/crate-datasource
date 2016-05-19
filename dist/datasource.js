@@ -65,11 +65,11 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                 return [];
               } else {
                 if (target.rawQuery) {
-                  return _this._sql_query(target.query).then(function (response) {
+                  return _this._sql_query(target.query, [timeFrom, timeTo]).then(function (response) {
                     return response_handler.handle_response(target, response);
                   });
                 } else {
-                  return _this._sql_query(queryBuilder.buildQuery(target, timeFrom, timeTo)).then(function (response) {
+                  return _this._sql_query(queryBuilder.buildQuery(target, true), [timeFrom, timeTo]).then(function (response) {
                     return response_handler.handle_response(target, response);
                   });
                 }
@@ -102,10 +102,13 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
         }, {
           key: '_sql_query',
           value: function _sql_query(query) {
+            var args = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+
             return this.backendSrv.datasourceRequest({
               url: this.url + '/_sql',
               data: {
-                "stmt": query
+                "stmt": query,
+                "args": args
               },
               method: 'POST',
               headers: {

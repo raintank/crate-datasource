@@ -57,7 +57,7 @@ System.register(["lodash"], function (_export, _context) {
       }
       _export("addTimeRange", addTimeRange);
 
-      function buildQuery(target, timeFrom, timeTo) {
+      function buildQuery(target, addTimeRange) {
         var query = "SELECT ";
         query = query + target.selectColumns.join();
         query = query + " FROM \"" + target.schema + "\".\"" + target.table + "\"";
@@ -68,14 +68,14 @@ System.register(["lodash"], function (_export, _context) {
         }
 
         // Add time range
-        if (timeFrom || timeTo) {
+        if (addTimeRange) {
           if (!target.whereClauses || target.whereClauses.length === 0) {
             query += " WHERE ";
           } else {
             query += " AND ";
           }
           var timeColumn = target.orderBy;
-          query += timeColumn + " > " + timeFrom + " AND " + timeColumn + " < " + timeTo;
+          query += timeColumn + " >= ? AND " + timeColumn + " <= ?";
         }
 
         // ORDER BY

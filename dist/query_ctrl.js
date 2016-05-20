@@ -83,10 +83,11 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             schema: "doc",
             table: "default",
             selectColumns: ["*"],
-            groupBy: "*",
+            groupResponseBy: "*",
             whereClauses: [],
             orderBy: "time",
-            orderType: "ASC"
+            orderType: "ASC",
+            aliasBy: "*"
           };
           _.defaults(_this.target, target_defaults);
 
@@ -98,7 +99,8 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
           _this.schemaSegment = _this.uiSegmentSrv.newSegment(_this.target.schema);
           _this.tableSegment = _this.uiSegmentSrv.newSegment(_this.target.table);
           _this.selectColumnSegments = _.map(_this.target.selectColumns, _this.uiSegmentSrv.newSegment);
-          _this.groupBySegment = _this.uiSegmentSrv.newSegment(_this.target.groupBy);
+          _this.groupResponseBySegment = _this.uiSegmentSrv.newSegment(_this.target.groupResponseBy);
+          _this.aliasBySegment = _this.uiSegmentSrv.newSegment(_this.target.aliasBy);
 
           // Build WHERE segments
           _this.whereSegments = [];
@@ -162,9 +164,15 @@ System.register(['angular', 'lodash', 'app/plugins/sdk', './query_builder'], fun
             this.buildQuery();
           }
         }, {
-          key: 'groupBySegmentChanged',
-          value: function groupBySegmentChanged() {
-            this.target.groupBy = this.groupBySegment.value;
+          key: 'groupResponseBySegmentChanged',
+          value: function groupResponseBySegmentChanged() {
+            this.target.groupResponseBy = this.groupResponseBySegment.value;
+            this.buildQuery();
+          }
+        }, {
+          key: 'aliasBySegmentChanged',
+          value: function aliasBySegmentChanged() {
+            this.target.aliasBy = this.aliasBySegment.value;
             this.buildQuery();
           }
         }, {

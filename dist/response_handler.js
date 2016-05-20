@@ -20,8 +20,9 @@ System.register(['lodash'], function (_export, _context) {
           valueColumnIndex = 0;
         }
 
-        var groupByColumnIndex = _.indexOf(response.data.cols, target.groupBy);
-        if (target.groupBy && target.groupBy !== '*' && groupByColumnIndex !== -1) {
+        var groupByColumnIndex = _.indexOf(response.data.cols, target.groupResponseBy);
+        var aliasByColumnIndex = _.indexOf(response.data.cols, target.aliasBy);
+        if (target.groupResponseBy && target.groupResponseBy !== '*' && groupByColumnIndex !== -1) {
           var groupedResponse = _.groupBy(response.data.rows, function (row) {
             return row[groupByColumnIndex];
           });
@@ -31,8 +32,9 @@ System.register(['lodash'], function (_export, _context) {
               Number(row[timeColumnIndex]) // timestamp
               ];
             });
+            var alias = rows[0][aliasByColumnIndex];
             return {
-              target: key,
+              target: alias,
               datapoints: datapoints
             };
           });

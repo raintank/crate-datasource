@@ -52,14 +52,6 @@
           on-change="ctrl.columnSegmentChanged(segment, $index)">
         </metric-segment>
       </div>
-      <div class="gf-form">
-        <label class="gf-form-label query-keyword width-7">GROUP BY</label>
-        <metric-segment segment="ctrl.groupBySegment"
-          get-options="ctrl.getColumns()"
-          on-change="ctrl.groupBySegmentChanged()">
-        </metric-segment>
-      </div>
-
       <div class="gf-form gf-form--grow">
         <div class="gf-form-label gf-form-label--grow"></div>
       </div>
@@ -78,6 +70,20 @@
         <metric-segment segment="ctrl.orderTypeSegment"
           get-options="ctrl.getOrderTypes()"
           on-change="ctrl.orderByChanged()">
+        </metric-segment>
+      </div>
+      <div class="gf-form">
+        <label class="gf-form-label query-keyword width-7">ALIAS BY</label>
+        <metric-segment segment="ctrl.aliasBySegment"
+          get-options="ctrl.getColumns()"
+          on-change="ctrl.aliasBySegmentChanged()">
+        </metric-segment>
+      </div>
+      <div class="gf-form">
+        <label class="gf-form-label query-keyword width-12">GROUP RESPONSE BY</label>
+        <metric-segment segment="ctrl.groupResponseBySegment"
+          get-options="ctrl.getColumns()"
+          on-change="ctrl.groupResponseBySegmentChanged()">
         </metric-segment>
       </div>
       <div class="gf-form gf-form--grow">

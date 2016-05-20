@@ -12,8 +12,8 @@ export function handle_response(target, response) {
     valueColumnIndex = 0;
   }
 
-  var groupByColumnIndex = _.indexOf(response.data.cols, target.groupBy);
-  if (target.groupBy && target.groupBy !== '*' && groupByColumnIndex !== -1) {
+  var groupByColumnIndex = _.indexOf(response.data.cols, target.groupResponseBy);
+  if (target.groupResponseBy && target.groupResponseBy !== '*' && groupByColumnIndex !== -1) {
     var groupedResponse = _.groupBy(response.data.rows, row => {
       return row[groupByColumnIndex];
     });

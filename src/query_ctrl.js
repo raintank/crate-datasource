@@ -21,7 +21,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       schema: "doc",
       table: "default",
       selectColumns: ["*"],
-      groupBy: "*",
+      groupResponseBy: "*",
       whereClauses: [],
       orderBy: "time",
       orderType: "ASC"
@@ -36,7 +36,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.schemaSegment = this.uiSegmentSrv.newSegment(this.target.schema);
     this.tableSegment = this.uiSegmentSrv.newSegment(this.target.table);
     this.selectColumnSegments = _.map(this.target.selectColumns, this.uiSegmentSrv.newSegment);
-    this.groupBySegment = this.uiSegmentSrv.newSegment(this.target.groupBy);
+    this.groupResponseBySegment = this.uiSegmentSrv.newSegment(this.target.groupResponseBy);
 
     // Build WHERE segments
     this.whereSegments = [];
@@ -93,8 +93,8 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.buildQuery();
   }
 
-  groupBySegmentChanged() {
-    this.target.groupBy = this.groupBySegment.value;
+  groupResponseBySegmentChanged() {
+    this.target.groupResponseBy = this.groupResponseBySegment.value;
     this.buildQuery();
   }
 

@@ -18,7 +18,7 @@ module.exports = function(grunt) {
       },
       pluginDef: {
         expand: true,
-        src: [ 'plugin.json', 'README.md' ],
+        src: ['plugin.json', 'README.md'],
         dest: 'dist'
       }
     },
@@ -49,43 +49,6 @@ module.exports = function(grunt) {
       }
     },
 
-    babel: {
-      options: {
-        sourceMap: true,
-        presets:  ['es2015']
-      },
-      dist: {
-        options: {
-          plugins: ['transform-es2015-modules-systemjs', 'transform-es2015-for-of']
-        },
-        files: [{
-          cwd: 'src',
-          expand: true,
-          src: ['**/*.js'],
-          dest: 'dist',
-          ext:'.js'
-        }]
-      },
-      distTestNoSystemJs: {
-        files: [{
-          cwd: 'src',
-          expand: true,
-          src: ['**/*.js'],
-          dest: 'dist/test',
-          ext:'.js'
-        }]
-      },
-      distTestsSpecsNoSystemJs: {
-        files: [{
-          expand: true,
-          cwd: 'spec',
-          src: ['**/*.js'],
-          dest: 'dist/test/spec',
-          ext:'.js'
-        }]
-      }
-    },
-
     mochaTest: {
       test: {
         options: {
@@ -101,7 +64,6 @@ module.exports = function(grunt) {
     'copy:src_to_dist',
     'copy:pluginDef',
     'typescript',
-    'babel',
     'mochaTest'
   ]);
 };

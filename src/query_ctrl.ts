@@ -1,16 +1,27 @@
+///<reference path="../headers/common.d.ts" />
+
 import angular from 'angular';
 import _ from 'lodash';
-import {QueryCtrl} from 'app/plugins/sdk';
+import {QueryCtrl} from './sdk/sdk';
 import * as queryBuilder from './query_builder';
 
 export class CrateDatasourceQueryCtrl extends QueryCtrl {
+  static templateUrl = 'partials/query.editor.html';
 
-  constructor($scope, $injector, $q, uiSegmentSrv)  {
+  orderTypes: any;
+  orderTypeSegment: any;
+  orderBySegment: any;
+  schemaSegment: any;
+  tableSegment: any;
+  selectColumnSegments: any;
+  groupResponseBySegment: any;
+  aliasBySegment: any;
+  whereSegments: any;
+  removeWhereSegment: any;
+  operators: any;
+
+  constructor($scope, $injector, private $q, private uiSegmentSrv)  {
     super($scope, $injector);
-
-    this.scope = $scope;
-    this.$q = $q;
-    this.uiSegmentSrv = uiSegmentSrv;
 
     this.operators = {
       compare: ['<', '>', '<=', '>=', '=', '<>', '!=', 'like'],
@@ -65,7 +76,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   }
 
   buildQuery() {
-    this.target.query = queryBuilder.buildQuery(this.target);
+    this.target.query = queryBuilder.buildQuery(this.target, undefined);
     this.onChangeInternal();
   }
 
@@ -270,6 +281,3 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   }
 
 }
-
-CrateDatasourceQueryCtrl.templateUrl = 'partials/query.editor.html';
-

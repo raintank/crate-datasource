@@ -6,7 +6,7 @@ import * as response_handler from './response_handler';
 
 // Hack for datemath module
 // TODO: replace for original 'app/core/utils/datemath'
-import * as dateMath from './utils/datemath';
+import * as dateMath from 'app/core/utils/datemath';
 
 export class CrateDatasource {
   type: string;

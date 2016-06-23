@@ -33,6 +33,13 @@ declare module 'app/core/utils/kbn' {
   export default kbn;
 }
 
+// Hack for datemath module
+declare module 'app/core/utils/datemath' {
+  export var parse: any;
+  export var isValid: any;
+  export var parseDateMath: any;
+}
+
 declare module 'app/core/store' {
   var store: any;
   export default store;

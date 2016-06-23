@@ -33,7 +33,7 @@ module.exports = function(grunt) {
 
     typescript: {
       build: {
-        src: ['src/**/*.ts', "!vendor/**/*", "!**/*.d.ts"],
+        src: ['src/**/*.ts', "!src/spec/**/*", "!**/*.d.ts"],
         dest: 'dist/',
         options: {
           module: 'system', //or commonjs
@@ -46,6 +46,50 @@ module.exports = function(grunt) {
           sourceMap: true,
           noImplicitAny: false,
         }
+      },
+      distTests: {
+        src: ['src/**/*.ts', "!src/spec/**/*", "!**/*.d.ts"],
+        dest: 'dist/test/',
+        options: {
+          module: 'commonjs', //or commonjs
+          target: 'es5', //or es5
+          rootDir: 'src/',
+          sourceRoot: 'src/',
+          declaration: true,
+          emitDecoratorMetadata: true,
+          experimentalDecorators: true,
+          sourceMap: true,
+          noImplicitAny: false,
+        }
+      },
+      // distTestsSpecs: {
+      //   src: ['src/spec/**/*.ts'],
+      //   dest: 'dist/test/',
+      //   options: {
+      //     module: 'commonjs', //or commonjs
+      //     target: 'es5', //or es5
+      //     declaration: true,
+      //     emitDecoratorMetadata: true,
+      //     experimentalDecorators: true,
+      //     sourceMap: true,
+      //     noImplicitAny: false,
+      //   }
+      // }
+    },
+
+    babel: {
+      options: {
+        sourceMap: true,
+        presets:  ['es2015']
+      },
+      distTestsSpecsNoSystemJs: {
+        files: [{
+          expand: true,
+          cwd: 'src/spec',
+          src: ['**/*.js'],
+          dest: 'dist/test/spec',
+          ext:'.js'
+        }]
       }
     },
 
@@ -54,7 +98,7 @@ module.exports = function(grunt) {
         options: {
           reporter: 'spec'
         },
-        src: ['dist/test/spec/test-main.js', 'dist/test/spec/*_spec.js']
+        src: ['dist/test/spec/test-main.js', 'dist/test/spec/*_specs.js']
       }
     }
   });
@@ -63,7 +107,9 @@ module.exports = function(grunt) {
     'clean',
     'copy:src_to_dist',
     'copy:pluginDef',
-    'typescript',
+    'typescript:build',
+    'typescript:distTests',
+    'babel:distTestsSpecsNoSystemJs',
     'mochaTest'
   ]);
 };

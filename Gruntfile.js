@@ -31,6 +31,24 @@ module.exports = function(grunt) {
       }
     },
 
+    typescript: {
+      build: {
+        src: ['src/**/*.ts', "!vendor/**/*", "!**/*.d.ts"],
+        dest: 'dist/',
+        options: {
+          module: 'system', //or commonjs
+          target: 'es3', //or es5
+          rootDir: 'src/',
+          sourceRoot: 'src/',
+          declaration: true,
+          emitDecoratorMetadata: true,
+          experimentalDecorators: true,
+          sourceMap: true,
+          noImplicitAny: false,
+        }
+      }
+    },
+
     babel: {
       options: {
         sourceMap: true,
@@ -78,5 +96,12 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('default', ['clean', 'copy:src_to_dist', 'copy:pluginDef', 'babel', 'mochaTest']);
+  grunt.registerTask('default', [
+    'clean',
+    'copy:src_to_dist',
+    'copy:pluginDef',
+    'typescript',
+    'babel',
+    'mochaTest'
+  ]);
 };

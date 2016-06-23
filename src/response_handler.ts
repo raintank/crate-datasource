@@ -1,3 +1,5 @@
+///<reference path="../headers/common.d.ts" />
+
 import _ from 'lodash';
 
 export function handle_response(target, response) {

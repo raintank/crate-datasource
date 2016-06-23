@@ -1,11 +1,19 @@
+///<reference path="../headers/common.d.ts" />
+
 import _ from 'lodash';
-import * as dateMath from 'app/core/utils/datemath';
 import * as queryBuilder from './query_builder';
 import * as response_handler from './response_handler';
 
-export class CrateDatasource {
+// Hack for datemath module
+// TODO: replace for original 'app/core/utils/datemath'
+import * as dateMath from './utils/datemath';
 
-  constructor(instanceSettings, $q, backendSrv) {
+export class CrateDatasource {
+  type: string;
+  url: string;
+  name: string;
+
+  constructor(instanceSettings, private $q, private backendSrv) {
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
     this.name = instanceSettings.name;

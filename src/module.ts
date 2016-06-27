@@ -1,9 +1,6 @@
 import {CrateDatasource} from './datasource';
 import {CrateDatasourceQueryCtrl} from './query_ctrl';
-
-class CrateConfigCtrl {
-  static templateUrl = 'partials/config.html';
-}
+import {CrateConfigCtrl} from './config_ctrl';
 
 class CrateQueryOptionsCtrl {
   static templateUrl = 'partials/query.options.html';

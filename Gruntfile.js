@@ -26,7 +26,7 @@ module.exports = function(grunt) {
     watch: {
       rebuild_all: {
         files: ['src/**/*', 'plugin.json'],
-        tasks: ['default'],
+        tasks: ['watch-ts'],
         options: {spawn: false}
       }
     },
@@ -111,5 +111,12 @@ module.exports = function(grunt) {
     'typescript:distTests',
     'babel:distTestsSpecsNoSystemJs',
     'mochaTest'
+  ]);
+
+  grunt.registerTask('watch-ts', [
+    'clean',
+    'copy:src_to_dist',
+    'copy:pluginDef',
+    'typescript:build'
   ]);
 };

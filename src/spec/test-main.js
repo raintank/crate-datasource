@@ -15,6 +15,14 @@ var datemathMock = {
   parse: function() { }
 };
 
+var configMock = {
+  bootData: {
+    user: {
+      lightTheme: false
+    }
+  }
+};
+
 // Mock Grafana modules that are not available outside of the core project
 // Required for loading module.js
 prunk.mock('./css/query-editor.css!', 'no css, dude.');
@@ -22,6 +30,7 @@ prunk.mock('app/plugins/sdk', {
   QueryCtrl: null
 });
 prunk.mock('app/core/utils/datemath', datemathMock);
+prunk.mock('app/core/config', configMock);
 prunk.mock('angular', angularMocks);
 prunk.mock('jquery', 'module not found');
 

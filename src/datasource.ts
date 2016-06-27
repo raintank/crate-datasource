@@ -1,19 +1,20 @@
 ///<reference path="../headers/common.d.ts" />
 
 import _ from 'lodash';
+import * as dateMath from 'app/core/utils/datemath';
 import * as queryBuilder from './query_builder';
 import * as response_handler from './response_handler';
-
-// Hack for datemath module
-// TODO: replace for original 'app/core/utils/datemath'
-import * as dateMath from 'app/core/utils/datemath';
 
 export class CrateDatasource {
   type: string;
   url: string;
   name: string;
 
-  constructor(instanceSettings, private $q, private backendSrv) {
+  constructor(instanceSettings,
+              private $q,
+              private backendSrv,
+              private templateSrv) {
+
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
     this.name = instanceSettings.name;
@@ -23,10 +24,10 @@ export class CrateDatasource {
 
   // Called once per panel (graph)
   query(options) {
-    var timeFrom = Math.ceil(dateMath.parse(options.range.from));
-    var timeTo = Math.ceil(dateMath.parse(options.range.to));
+    let timeFrom = Math.ceil(dateMath.parse(options.range.from));
+    let timeTo = Math.ceil(dateMath.parse(options.range.to));
 
-    var queries = _.map(options.targets, target => {
+    let queries = _.map(options.targets, target => {
       if (target.hide || (target.rawQuery && !target.query)) {
         return [];
       } else {
@@ -50,26 +51,49 @@ export class CrateDatasource {
     });
   }
 
-  // Required
-  // Used for testing datasource in datasource configuration pange
+  /**
+   * Required.
+   * Checks datasource and returns Crate cluster name and version or
+   * error details.
+   */
   testDatasource() {
     return this.backendSrv.datasourceRequest({
       url: this.url + '/',
       method: 'GET'
     }).then(response => {
       if (response.status === 200) {
-        var cluster_name = response.data.cluster_name;
-        var crate_version = response.data.version.number;
+        let cluster_name = response.data.cluster_name;
+        let crate_version = response.data.version.number;
         return {
           status: "success",
           message: "Cluster: " + cluster_name + ", version: " + crate_version,
           title: "Success"
         };
       }
+    }, error => {
+      let message = error.statusText + ': ';
+      if (error.data && error.data.error) {
+        message += error.data.error;
+      } else {
+        message += error.data;
+      }
+      return {
+        status: "error",
+        message: message,
+        title: "Error"
+      };
     });
   }
 
-  _sql_query(query, args=[]) {
+  /**
+   * Sends SQL query to Crate and returns result.
+   *
+   * @param {string} query SQL query string
+   * @param {any[]}  args  Optional query arguments
+   *
+   * @return
+   */
+  _sql_query(query: string, args: any[] = []) {
     return this.backendSrv.datasourceRequest({
       url: this.url + '/_sql',
       data: {
@@ -80,6 +104,10 @@ export class CrateDatasource {
       headers: {
         'Content-Type': 'application/json'
       }
+    }).then(result => {
+      return result;
+    }, error => {
+      return error;
     });
   }
 

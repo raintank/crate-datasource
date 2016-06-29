@@ -2,6 +2,88 @@
 
 import _ from 'lodash';
 
+export class CrateQueryBuilder {
+  schema: string;
+  table: string;
+  defaultTimeColumn: string;
+  defaultGroupInterval: string;
+
+  constructor(schema: string,
+              table: string,
+              defaultTimeColumn: string,
+              defaultGroupInterval: string) {
+    this.schema = schema;
+    this.table = table;
+    this.defaultTimeColumn = defaultTimeColumn;
+    this.defaultGroupInterval = defaultGroupInterval;
+  }
+
+  /**
+   * Builds Crate SQL query from given target object.
+   * @param  {any}    target  Target object.
+   * @return {string}         SQL query.
+   */
+  build(target) {
+    let query = "SELECT date_trunc('minute', " + this.defaultTimeColumn + ") as time " +
+      target.selectColumns +
+      "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
+      "WHERE time >= ? AND time <= ?";
+
+    // WHERE
+    if (target.whereClauses && target.whereClauses.length) {
+      query += " AND " + this.renderWhereClauses(target.whereClauses);
+    }
+
+    query += " GROUP BY time ";
+    query += "ORDER BY time ASC";
+
+    return query;
+  }
+
+  /**
+   * Builds SQL query for getting available columns from table.
+   * @return  {string}  SQL query.
+   */
+  getColumnsQuery() {
+    let query = "SELECT column_name " +
+                 "FROM information_schema.columns " +
+                 "WHERE schema_name = '" + this.schema + "' " +
+                   "AND table_name = '" + this.table + "' " +
+                 "ORDER BY 1";
+    return query;
+  }
+
+  /**
+   * Builds SQL query for getting unique values for given column.
+   * @param  {string}  column  Column name
+   * @param  {number}  limit   Optional. Limit number returned values.
+   */
+  getValuesQuery(column: string, limit?: number) {
+    let query = "SELECT DISTINCT " + column + " " +
+                 "FROM \"" + this.schema + "\".\"" + this.table + "\"";
+
+    if (limit) {
+      query += " LIMIT " + limit;
+    }
+    return query;
+  }
+
+  private renderWhereClauses(whereClauses) {
+    let renderedClauses = _.map(whereClauses, (clauseObj, index) => {
+      let rendered = "";
+      if (index !== 0) {
+        rendered += clauseObj.condition;
+      }
+
+      // Put non-numeric values into quotes.
+      let value = _.isNumber(clauseObj.value) ? Number(clauseObj.value) : "'" + clauseObj.value + "'";
+      rendered += clauseObj.key + ' ' + clauseObj.operator + ' ' + value;
+      return rendered;
+    });
+    return renderedClauses.join(' ');
+  }
+}
+
 export function getSchemas() {
   var query = "SELECT DISTINCT schema_name " +
               "FROM information_schema.tables " +

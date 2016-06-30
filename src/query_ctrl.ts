@@ -3,11 +3,13 @@
 import angular from 'angular';
 import _ from 'lodash';
 import {QueryCtrl} from './sdk/sdk';
-import * as queryBuilder from './query_builder';
+import {CrateQueryBuilder} from './query_builder';
+import queryDef from './query_def';
 
 export class CrateDatasourceQueryCtrl extends QueryCtrl {
   static templateUrl = 'partials/query.editor.html';
 
+  crateQueryBuilder: CrateQueryBuilder;
   orderTypes: any;
   orderTypeSegment: any;
   orderBySegment: any;
@@ -23,6 +25,14 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   constructor($scope, $injector, private $q, private uiSegmentSrv)  {
     super($scope, $injector);
 
+    this.uiSegmentSrv = uiSegmentSrv;
+
+    let ds = this.datasource;
+    this.crateQueryBuilder = new CrateQueryBuilder(ds.schema,
+                                                   ds.table,
+                                                   ds.defaultTimeColumn,
+                                                   ds.defaultGroupInterval);
+
     this.operators = {
       compare: ['<', '>', '<=', '>=', '=', '<>', '!=', 'like'],
       regex: ['~', '!~']
@@ -31,6 +41,9 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     var target_defaults = {
       schema: "doc",
       table: "default",
+      metricAggs: [
+        {type: 'avg', column: 'value'}
+      ],
       selectColumns: ["*"],
       groupResponseBy: "*",
       whereClauses: [],
@@ -75,11 +88,6 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     });
   }
 
-  buildQuery() {
-    this.target.query = queryBuilder.buildQuery(this.target, undefined);
-    this.onChangeInternal();
-  }
-
   // Event handlers
   onChangeInternal() {
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
@@ -87,12 +95,12 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
   schemaChanged() {
     this.target.schema = this.schemaSegment.value;
-    this.buildQuery();
+    this.onChangeInternal();
   }
 
   tableChanged() {
     this.target.table = this.tableSegment.value;
-    this.buildQuery();
+    this.onChangeInternal();
   }
 
   columnSegmentChanged(segment, index) {
@@ -103,60 +111,46 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.target.selectColumns = _.map(_.filter(this.selectColumnSegments, segment => {
       return segment.type !== 'plus-button';
     }), 'value');
-    this.buildQuery();
+    this.onChangeInternal();
   }
 
   groupResponseBySegmentChanged() {
     this.target.groupResponseBy = this.groupResponseBySegment.value;
-    this.buildQuery();
+    this.onChangeInternal();
   }
 
   aliasBySegmentChanged() {
     this.target.aliasBy = this.aliasBySegment.value;
-    this.buildQuery();
+    this.onChangeInternal();
   }
 
   orderByChanged() {
     this.target.orderBy = this.orderBySegment.value;
     this.target.orderType = this.orderTypeSegment.value;
-    this.buildQuery();
+    this.onChangeInternal();
   }
 
-  toggleEditorMode() {
+  toggleEditorMode(): void {
     this.target.rawQuery = !this.target.rawQuery;
   }
 
-  // Query suggestions
-  getSchemas() {
-    var self = this;
-    return this.crateQuery(queryBuilder.getSchemas())
-      .then(rows => {
-        return self.transformToSegments(rows);
-      });
-  }
-
-  getTables() {
-    var self = this;
-    return this.crateQuery(queryBuilder.getTables(this.schemaSegment.value))
-      .then(rows => {
-        return self.transformToSegments(rows);
-      });
-  }
+  ///////////////////////
+  // Query suggestions //
+  ///////////////////////
 
   getColumns() {
-    var self = this;
-    return this.crateQuery(queryBuilder.getColumns(this.schemaSegment.value, this.tableSegment.value))
+    let self = this;
+    return this.crateQuery(this.crateQueryBuilder.getColumnsQuery())
       .then(rows => {
-        return self.transformToSegments(rows);
+        return self.transformToSegments(_.flatten(rows));
       });
   }
 
-  getValues(column, limit=10) {
-    var self = this;
-    return this.crateQuery(queryBuilder.getValues(this.schemaSegment.value, this.tableSegment.value, column, limit))
+  getValues(column, limit = 10) {
+    let self = this;
+    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit))
       .then(rows => {
-        var uniqRows = _.uniq(_.flatten(rows));
-        return self.transformToSegments(uniqRows);
+        return self.transformToSegments(_.flatten(rows));
       });
   }
 
@@ -175,10 +169,17 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       });
     } else if (segment.type === 'value') {
       return this.getValues(this.whereSegments[index - 2].value).then(columns => {
-        columns.splice(0, 0, angular.copy(this.removeWhereSegment));
         return columns;
       });
     }
+  }
+
+  getMetricAggTypes() {
+    return queryDef.getMetricAggTypes();
+  }
+
+  getMetricAggDef(aggType) {
+    return _.findWhere(this.getMetricAggTypes(), { value: aggType });
   }
 
   whereSegmentUpdated(segment, index) {

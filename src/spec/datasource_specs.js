@@ -11,7 +11,16 @@ describe('CrateDatasource', function() {
       ctx.$q = Q;
       ctx.backendSrv = {};
       ctx.templateSrv = {};
-      ctx.ds = new Datasource({url: "http://crate.io:4200"}, ctx.$q, ctx.backendSrv, ctx.templateSrv);
+      ctx.instanceSettings = {
+        url: "http://crate.io:4200",
+        jsonData: {
+          schema: 'stats',
+          table: 'nodes',
+          defaultTimeColumn: 'ts',
+          defaultGroupInterval: 'minute'
+        }
+      };
+      ctx.ds = new Datasource(ctx.instanceSettings, ctx.$q, ctx.backendSrv, ctx.templateSrv);
     });
 
     it('should return Crate cluster name and version if test ok', function(done) {

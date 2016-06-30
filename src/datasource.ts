@@ -9,6 +9,11 @@ export class CrateDatasource {
   type: string;
   url: string;
   name: string;
+  schema: string;
+  table: string;
+  defaultTimeColumn: string;
+  defaultGroupInterval: string;
+
 
   constructor(instanceSettings,
               private $q,
@@ -18,8 +23,13 @@ export class CrateDatasource {
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
     this.name = instanceSettings.name;
+    this.schema = instanceSettings.jsonData.schema;
+    this.table = instanceSettings.jsonData.table;
+    this.defaultTimeColumn = instanceSettings.jsonData.defaultTimeColumn;
+    this.defaultGroupInterval = instanceSettings.jsonData.defaultGroupInterval;
     this.$q = $q;
     this.backendSrv = backendSrv;
+    this.templateSrv = templateSrv;
   }
 
   // Called once per panel (graph)

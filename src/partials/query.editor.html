@@ -63,7 +63,7 @@
         <metric-segment-model ng-if="ctrl.getMetricAggDef(agg.type).requiresColumn"
           property="agg.column"
           get-options="ctrl.getColumns()"
-          on-change="ctrl.onChange()"
+          on-change="ctrl.onChangeInternal()"
           css-class="width-12">
         </metric-segment-model>
       </div>

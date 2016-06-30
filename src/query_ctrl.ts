@@ -100,12 +100,18 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.onChangeInternal();
   }
 
+  onAggTypeChange(): void {
+    this.onChangeInternal();
+  }
+
   addMetricAgg(): void {
     this.target.metricAggs.push({ type: 'avg', column: 'value' });
+    this.onChangeInternal();
   }
 
   removeMetricAgg(index): void {
     this.target.metricAggs.splice(index, 1);
+    this.onChangeInternal();
   }
 
   toggleEditorMode(): void {

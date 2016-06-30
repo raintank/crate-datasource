@@ -14,7 +14,8 @@ describe('CrateQueryBuilder', function() {
         ],
         whereClauses: [
           {condition: 'AND', key: 'hostname', operator: '=', value: 'backend01'}
-        ]
+        ],
+        groupByColumns: [],
       };
     });
 
@@ -25,6 +26,25 @@ describe('CrateQueryBuilder', function() {
                            "WHERE time >= ? AND time <= ? " +
                              "AND hostname = 'backend01' " +
                            "GROUP BY time " +
+                           "ORDER BY time ASC";
+      var query = ctx.queryBuilder.build(ctx.target);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
+    it('should add GROUP BY columns to SELECT expression', function(done) {
+      ctx.target = {
+        metricAggs: [
+          {type: 'avg', column: 'load'}
+        ],
+        whereClauses: [],
+        groupByColumns: ['hostname'],
+      };
+      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+                           "avg(load), hostname " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE time >= ? AND time <= ? " +
+                           "GROUP BY time, hostname " +
                            "ORDER BY time ASC";
       var query = ctx.queryBuilder.build(ctx.target);
       expect(query).to.equal(expected_query);

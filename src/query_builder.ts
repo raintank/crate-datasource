@@ -24,18 +24,29 @@ export class CrateQueryBuilder {
    * @return {string}         SQL query.
    */
   build(target) {
+    // SELECT
     let query = "SELECT date_trunc('minute', " + this.defaultTimeColumn + ") as time, " +
-      this.renderMetricAggs(target.metricAggs) +
-      "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-      "WHERE time >= ? AND time <= ?";
+      this.renderMetricAggs(target.metricAggs);
+
+    // Add GROUP BY columns to SELECT statement.
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+    query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
+             "WHERE time >= ? AND time <= ?";
 
     // WHERE
     if (target.whereClauses && target.whereClauses.length) {
       query += " AND " + this.renderWhereClauses(target.whereClauses);
     }
 
-    query += " GROUP BY time ";
-    query += "ORDER BY time ASC";
+    // GROUP BY
+    query += " GROUP BY time";
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+
+    query += " ORDER BY time ASC";
 
     return query;
   }
@@ -73,7 +84,7 @@ export class CrateQueryBuilder {
       return agg.type + "(" + agg.column + ")";
     });
     if (renderedAggs.length) {
-      return renderedAggs.join(', ') + " ";
+      return renderedAggs.join(', ');
     } else {
       return "";
     }

@@ -9,7 +9,9 @@ describe('CrateQueryBuilder', function() {
     beforeEach(function() {
       ctx.queryBuilder = new CrateQueryBuilder('stats', 'nodes', 'ts', 'minute');
       ctx.target = {
-        selectColumns: [],
+        metricAggs: [
+          {type: 'avg', column: 'load'}
+        ],
         whereClauses: [
           {condition: 'AND', key: 'hostname', operator: '=', value: 'backend01'}
         ]
@@ -17,7 +19,8 @@ describe('CrateQueryBuilder', function() {
     });
 
     it('should build proper Crate SQL query', function(done) {
-      var expected_query = "SELECT date_trunc('minute', ts) as time " +
+      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+                           "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE time >= ? AND time <= ? " +
                              "AND hostname = 'backend01' " +

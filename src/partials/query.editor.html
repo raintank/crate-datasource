@@ -1,4 +1,4 @@
-<query-editor-row query-ctrl="ctrl" has-text-edit-mode="true">
+<query-editor-row query-ctrl="ctrl" has-text-edit-mode="true" can-collapse="true">
 
   <!-- Raw editor -->
   <div class="gf-form" ng-if="ctrl.target.rawQuery">
@@ -15,14 +15,11 @@
     <div class="gf-form-inline">
       <div class="gf-form">
         <label class="gf-form-label query-keyword width-7">FROM</label>
-        <metric-segment segment="ctrl.schemaSegment"
-          get-options="ctrl.getSchemas()"
-          on-change="ctrl.schemaChanged()">
-        </metric-segment>
-        <metric-segment segment="ctrl.tableSegment"
-          get-options="ctrl.getTables()"
-          on-change="ctrl.tableChanged()">
-        </metric-segment>
+      </div>
+      <div class="gf-form">
+        <label class="gf-form-label query-keyword width-12">
+          {{ctrl.datasource.schema}}.{{ctrl.datasource.table}}
+        </label>
       </div>
 
       <div class="gf-form">
@@ -40,26 +37,10 @@
       </div>
     </div>
 
-    <div class="gf-form-inline">
-      <div class="gf-form">
-        <label class="gf-form-label query-keyword width-7">
-          <span>SELECT</span>
-        </label>
-      </div>
-      <div class="gf-form" ng-repeat="segment in ctrl.selectColumnSegments">
-        <metric-segment segment="segment"
-          get-options="ctrl.getColumns()"
-          on-change="ctrl.columnSegmentChanged(segment, $index)">
-        </metric-segment>
-      </div>
-      <div class="gf-form gf-form--grow">
-        <div class="gf-form-label gf-form-label--grow"></div>
-      </div>
-    </div>
-
     <div class="gf-form-inline"
       ng-repeat="agg in ctrl.target.metricAggs"
       ng-class="{'gf-form-disabled': agg.hide}">
+
       <div class="gf-form">
         <label class="gf-form-label query-keyword width-7">
           SELECT
@@ -98,42 +79,42 @@
       </div>
 
       <div class="gf-form">
-        <label class="gf-form-label" ng-if="isFirst">
-          <a class="pointer" ng-click="addMetricAgg()"><i class="fa fa-plus"></i></a>
+        <label class="gf-form-label" ng-if="$first">
+          <a class="pointer" ng-click="ctrl.addMetricAgg()">
+            <i class="fa fa-plus"></i>
+          </a>
         </label>
-        <label class="gf-form-label" ng-if="!isSingle">
-          <a class="pointer" ng-click="removeMetricAgg()"><i class="fa fa-minus"></i></a>
+        <label class="gf-form-label" ng-if="ctrl.target.metricAggs.length > 1">
+          <a class="pointer" ng-click="ctrl.removeMetricAgg($index)">
+            <i class="fa fa-minus"></i>
+          </a>
         </label>
       </div>
     </div>
 
     <div class="gf-form-inline">
       <div class="gf-form">
-        <label class="gf-form-label query-keyword width-7">ORDER BY</label>
-        <metric-segment segment="ctrl.orderBySegment"
-          get-options="ctrl.getOrderByColumns()"
-          on-change="ctrl.orderByChanged()">
+        <label class="gf-form-label query-keyword width-7">
+          <span>GROUP BY</span>
+        </label>
+      </div>
+      <div class="gf-form" ng-repeat="segment in ctrl.groupBySegments">
+        <metric-segment segment="segment"
+          get-options="ctrl.getGroupByColumns()"
+          on-change="ctrl.groupBySegmentChanged(segment, $index)">
         </metric-segment>
       </div>
-      <div class="gf-form">
-        <!-- ASC/DESC -->
-        <metric-segment segment="ctrl.orderTypeSegment"
-          get-options="ctrl.getOrderTypes()"
-          on-change="ctrl.orderByChanged()">
-        </metric-segment>
+      <div class="gf-form gf-form--grow">
+        <div class="gf-form-label gf-form-label--grow"></div>
       </div>
+    </div>
+
+    <div class="gf-form-inline">
       <div class="gf-form">
         <label class="gf-form-label query-keyword width-7">ALIAS BY</label>
         <metric-segment segment="ctrl.aliasBySegment"
           get-options="ctrl.getColumns()"
           on-change="ctrl.aliasBySegmentChanged()">
-        </metric-segment>
-      </div>
-      <div class="gf-form">
-        <label class="gf-form-label query-keyword width-12">GROUP RESPONSE BY</label>
-        <metric-segment segment="ctrl.groupResponseBySegment"
-          get-options="ctrl.getColumns()"
-          on-change="ctrl.groupResponseBySegmentChanged()">
         </metric-segment>
       </div>
       <div class="gf-form gf-form--grow">

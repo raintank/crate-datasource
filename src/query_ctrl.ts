@@ -10,17 +10,12 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   static templateUrl = 'partials/query.editor.html';
 
   crateQueryBuilder: CrateQueryBuilder;
-  orderTypes: any;
-  orderTypeSegment: any;
-  orderBySegment: any;
-  schemaSegment: any;
-  tableSegment: any;
-  selectColumnSegments: any;
-  groupResponseBySegment: any;
-  aliasBySegment: any;
+  groupBySegments: any;
   whereSegments: any;
   removeWhereSegment: any;
+
   operators: any;
+  aliasBySegment: any;
 
   constructor($scope, $injector, private $q, private uiSegmentSrv)  {
     super($scope, $injector);
@@ -39,29 +34,17 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     };
 
     var target_defaults = {
-      schema: "doc",
-      table: "default",
       metricAggs: [
         {type: 'avg', column: 'value'}
       ],
       selectColumns: ["*"],
-      groupResponseBy: "*",
+      groupByColumns: ['host'],
       whereClauses: [],
-      orderBy: "time",
-      orderType: "ASC",
       aliasBy: "*"
     };
     _.defaults(this.target, target_defaults);
 
-    var orderTypes = ["ASC", "DESC"];
-
-    this.orderTypes = _.map(orderTypes, this.uiSegmentSrv.newSegment);
-    this.orderTypeSegment = this.uiSegmentSrv.newSegment(this.target.orderType);
-    this.orderBySegment = this.uiSegmentSrv.newSegment(this.target.orderBy);
-    this.schemaSegment = this.uiSegmentSrv.newSegment(this.target.schema);
-    this.tableSegment = this.uiSegmentSrv.newSegment(this.target.table);
-    this.selectColumnSegments = _.map(this.target.selectColumns, this.uiSegmentSrv.newSegment);
-    this.groupResponseBySegment = this.uiSegmentSrv.newSegment(this.target.groupResponseBy);
+    this.groupBySegments = _.map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
     this.aliasBySegment = this.uiSegmentSrv.newSegment(this.target.aliasBy);
 
     // Build WHERE segments
@@ -71,15 +54,14 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       if (whereClause.condition) {
         self.whereSegments.push(uiSegmentSrv.newCondition(whereClause.condition));
       }
-      self.whereSegments.push(uiSegmentSrv.newKey(whereClause.left));
+      self.whereSegments.push(uiSegmentSrv.newKey(whereClause.key));
       self.whereSegments.push(uiSegmentSrv.newOperator(whereClause.operator));
-      self.whereSegments.push(uiSegmentSrv.newKeyValue(whereClause.right));
+      self.whereSegments.push(uiSegmentSrv.newKeyValue(whereClause.value));
     });
 
-    this.fixSelectColumnSegments();
-    this.fixSegments(this.whereSegments);
-
     this.removeWhereSegment = uiSegmentSrv.newSegment({fake: true, value: '-- remove --'});
+    this.fixSegments(this.whereSegments);
+    this.fixSegments(this.groupBySegments);
   }
 
   crateQuery(query) {
@@ -88,46 +70,42 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     });
   }
 
-  // Event handlers
-  onChangeInternal() {
+  getCollapsedText(): string {
+    return this.crateQueryBuilder.build(this.target);
+  }
+
+  ////////////////////
+  // Event handlers //
+  ////////////////////
+
+  onChangeInternal(): void {
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 
-  schemaChanged() {
-    this.target.schema = this.schemaSegment.value;
-    this.onChangeInternal();
-  }
-
-  tableChanged() {
-    this.target.table = this.tableSegment.value;
-    this.onChangeInternal();
-  }
-
-  columnSegmentChanged(segment, index) {
+  groupBySegmentChanged(segment, index): void {
     if (segment.type === 'plus-button') {
       segment.type = undefined;
-      this.selectColumnSegments.push(this.uiSegmentSrv.newPlusButton());
     }
-    this.target.selectColumns = _.map(_.filter(this.selectColumnSegments, segment => {
-      return segment.type !== 'plus-button';
+    this.target.groupByColumns = _.map(_.filter(this.groupBySegments, segment => {
+      return (segment.type !== 'plus-button' &&
+              segment.value !== this.removeWhereSegment.value);
     }), 'value');
+    this.groupBySegments = _.map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
+    this.groupBySegments.push(this.uiSegmentSrv.newPlusButton());
     this.onChangeInternal();
   }
 
-  groupResponseBySegmentChanged() {
-    this.target.groupResponseBy = this.groupResponseBySegment.value;
-    this.onChangeInternal();
-  }
-
-  aliasBySegmentChanged() {
+  aliasBySegmentChanged(): void {
     this.target.aliasBy = this.aliasBySegment.value;
     this.onChangeInternal();
   }
 
-  orderByChanged() {
-    this.target.orderBy = this.orderBySegment.value;
-    this.target.orderType = this.orderTypeSegment.value;
-    this.onChangeInternal();
+  addMetricAgg(): void {
+    this.target.metricAggs.push({ type: 'avg', column: 'value' });
+  }
+
+  removeMetricAgg(index): void {
+    this.target.metricAggs.splice(index, 1);
   }
 
   toggleEditorMode(): void {
@@ -144,6 +122,13 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       .then(rows => {
         return self.transformToSegments(_.flatten(rows));
       });
+  }
+
+  getGroupByColumns() {
+    return this.getColumns().then(columns => {
+      columns.splice(0, 0, angular.copy(this.removeWhereSegment));
+      return columns;
+    });
   }
 
   getValues(column, limit = 10) {
@@ -228,37 +213,19 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     var whereClauses = this.target.whereClauses;
     while (segments.length > i && segments[i].type !== 'plus-button') {
       if (whereClauses.length < whereIndex + 1) {
-        whereClauses.push({condition: '', left: '', operator: '', right: ''});
+        whereClauses.push({condition: '', key: '', operator: '', value: ''});
       }
       if (segments[i].type === 'condition') {
         whereClauses[whereIndex].condition = segments[i].value;
       } else if (segments[i].type === 'key') {
-        whereClauses[whereIndex].left = segments[i].value;
+        whereClauses[whereIndex].key = segments[i].value;
       } else if (segments[i].type === 'operator') {
         whereClauses[whereIndex].operator = segments[i].value;
       } else if (segments[i].type === 'value') {
-        whereClauses[whereIndex].right = segments[i].value;
+        whereClauses[whereIndex].value = segments[i].value;
         whereIndex++;
       }
       i++;
-    }
-  }
-
-  getOrderByColumns() {
-    return this.$q.when(this.selectColumnSegments);
-  }
-
-  getOrderTypes() {
-    var orderTypes = ["ASC", "DESC"];
-    return this.$q.when(this.transformToSegments(orderTypes));
-  }
-
-  fixSelectColumnSegments() {
-    var count = this.selectColumnSegments.length;
-    var lastSegment = this.selectColumnSegments[Math.max(count-1, 0)];
-
-    if (!lastSegment || lastSegment.type !== 'plus-button') {
-      this.selectColumnSegments.push(this.uiSegmentSrv.newPlusButton());
     }
   }
 

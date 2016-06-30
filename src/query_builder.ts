@@ -24,8 +24,8 @@ export class CrateQueryBuilder {
    * @return {string}         SQL query.
    */
   build(target) {
-    let query = "SELECT date_trunc('minute', " + this.defaultTimeColumn + ") as time " +
-      target.selectColumns +
+    let query = "SELECT date_trunc('minute', " + this.defaultTimeColumn + ") as time, " +
+      this.renderMetricAggs(target.metricAggs) +
       "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
       "WHERE time >= ? AND time <= ?";
 
@@ -68,7 +68,18 @@ export class CrateQueryBuilder {
     return query;
   }
 
-  private renderWhereClauses(whereClauses) {
+  private renderMetricAggs(metricAggs): string {
+    let renderedAggs = _.map(metricAggs, (agg) => {
+      return agg.type + "(" + agg.column + ")";
+    });
+    if (renderedAggs.length) {
+      return renderedAggs.join(', ') + " ";
+    } else {
+      return "";
+    }
+  }
+
+  private renderWhereClauses(whereClauses): string {
     let renderedClauses = _.map(whereClauses, (clauseObj, index) => {
       let rendered = "";
       if (index !== 0) {
@@ -128,8 +139,8 @@ function renderWhereClauses(whereClauses) {
     if (index !== 0) {
       rendered += ' ' + clauseObj.condition;
     }
-    var right = _.isNumber(clauseObj.right) ? Number(clauseObj.right) : "'" + clauseObj.right + "'";
-    rendered += ' ' + clauseObj.left + ' ' + clauseObj.operator + ' ' + right;
+    var value = _.isNumber(clauseObj.value) ? Number(clauseObj.value) : "'" + clauseObj.value + "'";
+    rendered += ' ' + clauseObj.key + ' ' + clauseObj.operator + ' ' + value;
     return rendered;
   });
   return renderedClauses.join(' ');

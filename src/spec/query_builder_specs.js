@@ -13,7 +13,7 @@ describe('CrateQueryBuilder', function() {
           {type: 'avg', column: 'load'}
         ],
         whereClauses: [
-          {condition: 'AND', key: 'hostname', operator: '=', value: 'backend01'}
+          {condition: 'AND', column: 'hostname', operator: '=', value: 'backend01'}
         ],
         groupByColumns: [],
       };

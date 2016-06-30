@@ -37,8 +37,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       metricAggs: [
         {type: 'avg', column: 'value'}
       ],
-      selectColumns: ["*"],
-      groupByColumns: ['host'],
+      groupByColumns: [],
       whereClauses: [],
       aliasBy: "*"
     };
@@ -49,18 +48,9 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
     // Build WHERE segments
     this.whereSegments = [];
-    var self = this;
-    _.forEach(this.target.whereClauses, whereClause => {
-      if (whereClause.condition) {
-        self.whereSegments.push(uiSegmentSrv.newCondition(whereClause.condition));
-      }
-      self.whereSegments.push(uiSegmentSrv.newKey(whereClause.key));
-      self.whereSegments.push(uiSegmentSrv.newOperator(whereClause.operator));
-      self.whereSegments.push(uiSegmentSrv.newKeyValue(whereClause.value));
-    });
+    this.buildWhereSegments(this.target.whereClauses);
 
     this.removeWhereSegment = uiSegmentSrv.newSegment({fake: true, value: '-- remove --'});
-    this.fixSegments(this.whereSegments);
     this.fixSegments(this.groupBySegments);
   }
 
@@ -212,19 +202,34 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     }
   }
 
+  ///////////////////////
+
+  buildWhereSegments(whereClauses: any): void {
+    var self = this;
+    _.forEach(whereClauses, whereClause => {
+      if (whereClause.condition) {
+        self.whereSegments.push(self.uiSegmentSrv.newCondition(whereClause.condition));
+      }
+      self.whereSegments.push(self.uiSegmentSrv.newKey(whereClause.column));
+      self.whereSegments.push(self.uiSegmentSrv.newOperator(whereClause.operator));
+      self.whereSegments.push(self.uiSegmentSrv.newKeyValue(whereClause.value));
+    });
+    this.fixSegments(this.whereSegments);
+  }
+
   buildWhereClauses() {
     var i = 0;
     var whereIndex = 0;
     var segments = this.whereSegments;
-    var whereClauses = this.target.whereClauses;
+    var whereClauses = [];
     while (segments.length > i && segments[i].type !== 'plus-button') {
       if (whereClauses.length < whereIndex + 1) {
-        whereClauses.push({condition: '', key: '', operator: '', value: ''});
+        whereClauses.push({condition: '', column: '', operator: '', value: ''});
       }
       if (segments[i].type === 'condition') {
         whereClauses[whereIndex].condition = segments[i].value;
       } else if (segments[i].type === 'key') {
-        whereClauses[whereIndex].key = segments[i].value;
+        whereClauses[whereIndex].column = segments[i].value;
       } else if (segments[i].type === 'operator') {
         whereClauses[whereIndex].operator = segments[i].value;
       } else if (segments[i].type === 'value') {
@@ -233,6 +238,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       }
       i++;
     }
+    this.target.whereClauses = whereClauses;
   }
 
   fixSegments(segments) {

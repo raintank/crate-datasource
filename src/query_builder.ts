@@ -99,7 +99,7 @@ export class CrateQueryBuilder {
 
       // Put non-numeric values into quotes.
       let value = _.isNumber(clauseObj.value) ? Number(clauseObj.value) : "'" + clauseObj.value + "'";
-      rendered += clauseObj.key + ' ' + clauseObj.operator + ' ' + value;
+      rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + value;
       return rendered;
     });
     return renderedClauses.join(' ');

@@ -94,7 +94,7 @@ export class CrateQueryBuilder {
     let renderedClauses = _.map(whereClauses, (clauseObj, index) => {
       let rendered = "";
       if (index !== 0) {
-        rendered += clauseObj.condition;
+        rendered += clauseObj.condition + " ";
       }
 
       // Put non-numeric values into quotes.

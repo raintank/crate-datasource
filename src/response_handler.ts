@@ -2,17 +2,9 @@
 
 import _ from 'lodash';
 
-export function handle_response(target, response) {
-  var valueColumnIndex;
-  var timeColumnIndex = _.findIndex(target.selectColumns, col => {
-    return col === target.orderBy;
-  });
-
-  if (timeColumnIndex === 0) {
-    valueColumnIndex = 1;
-  } else {
-    valueColumnIndex = 0;
-  }
+export default function handleResponse(target, response) {
+  let timeColumnIndex = 0;
+  let valueColumnIndex = 1;
 
   var groupByColumnIndex = _.indexOf(response.data.cols, target.groupResponseBy);
   var aliasByColumnIndex = _.indexOf(response.data.cols, target.aliasBy);

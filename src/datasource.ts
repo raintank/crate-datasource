@@ -2,8 +2,8 @@
 
 import _ from 'lodash';
 import * as dateMath from 'app/core/utils/datemath';
-import * as queryBuilder from './query_builder';
-import * as response_handler from './response_handler';
+import {CrateQueryBuilder} from './query_builder';
+import handleResponse from './response_handler';
 
 export class CrateDatasource {
   type: string;
@@ -13,6 +13,7 @@ export class CrateDatasource {
   table: string;
   defaultTimeColumn: string;
   defaultGroupInterval: string;
+  queryBuilder: CrateQueryBuilder;
 
 
   constructor(instanceSettings,
@@ -25,8 +26,13 @@ export class CrateDatasource {
     this.name = instanceSettings.name;
     this.schema = instanceSettings.jsonData.schema;
     this.table = instanceSettings.jsonData.table;
-    this.defaultTimeColumn = instanceSettings.jsonData.defaultTimeColumn;
-    this.defaultGroupInterval = instanceSettings.jsonData.defaultGroupInterval;
+    this.defaultTimeColumn = instanceSettings.jsonData.timeColumn;
+    this.defaultGroupInterval = instanceSettings.jsonData.timeInterval;
+    this.queryBuilder = new CrateQueryBuilder(this.schema,
+                                              this.table,
+                                              this.defaultTimeColumn,
+                                              this.defaultGroupInterval);
+
     this.$q = $q;
     this.backendSrv = backendSrv;
     this.templateSrv = templateSrv;
@@ -44,12 +50,12 @@ export class CrateDatasource {
         if (target.rawQuery) {
           return this._sql_query(target.query, [timeFrom, timeTo])
             .then(response => {
-              return response_handler.handle_response(target, response);
+              return handleResponse(target, response);
             });
         } else {
-          return this._sql_query(queryBuilder.buildQuery(target, true), [timeFrom, timeTo])
+          return this._sql_query(this.queryBuilder.build(target), [timeFrom, timeTo])
             .then(response => {
-              return response_handler.handle_response(target, response);
+              return handleResponse(target, response);
             });
         }
       }
@@ -97,10 +103,8 @@ export class CrateDatasource {
 
   /**
    * Sends SQL query to Crate and returns result.
-   *
    * @param {string} query SQL query string
    * @param {any[]}  args  Optional query arguments
-   *
    * @return
    */
   _sql_query(query: string, args: any[] = []) {

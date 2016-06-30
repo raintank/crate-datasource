@@ -3,31 +3,40 @@
 import _ from 'lodash';
 
 export default function handleResponse(target, response) {
+  let columns = response.data.cols;
   let timeColumnIndex = 0;
   let valueColumnIndex = 1;
 
-  var groupByColumnIndex = _.indexOf(response.data.cols, target.groupResponseBy);
-  var aliasByColumnIndex = _.indexOf(response.data.cols, target.aliasBy);
-  if (target.groupResponseBy && target.groupResponseBy !== '*' && groupByColumnIndex !== -1) {
-    var groupedResponse = _.groupBy(response.data.rows, row => {
-      return row[groupByColumnIndex];
+  let groupByColumnIndexes;
+  if (target.groupByColumns.length) {
+    groupByColumnIndexes = _.map(target.groupByColumns, groupByCol => {
+      return _.indexOf(columns, groupByCol);
     });
-    var datasets = _.map(groupedResponse, (rows, key) => {
-      var datapoints = _.map(rows, row => {
+  }
+
+  if (groupByColumnIndexes && groupByColumnIndexes.length && !_.some(groupByColumnIndexes, -1)) {
+    let groupedResponse = _.groupBy(response.data.rows, row => {
+      // Construct groupBy key from Group By columns, for example:
+      // [metric, host] => 'metric host'
+      return _.map(groupByColumnIndexes, columnIndex => {
+        return row[columnIndex];
+      }).join(' ');
+    });
+
+    return _.map(groupedResponse, (rows, key) => {
+      let datapoints = _.map(rows, row => {
         return [
           Number(row[valueColumnIndex]), // value
           Number(row[timeColumnIndex])  // timestamp
         ];
       });
-      var alias = rows[0][aliasByColumnIndex];
       return {
-        target: alias,
+        target: key,
         datapoints: datapoints
       };
     });
-    return datasets;
   } else {
-    var datapoints = _.map(response.data.rows, row => {
+    let datapoints = _.map(response.data.rows, row => {
       return [
         Number(row[valueColumnIndex]), // value
         Number(row[timeColumnIndex])  // timestamp

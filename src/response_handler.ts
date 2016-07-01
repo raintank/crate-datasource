@@ -2,8 +2,8 @@
 
 import _ from 'lodash';
 
-export default function handleResponse(target, response) {
-  let columns = response.data.cols;
+export default function handleResponse(target, result) {
+  let columns = result.cols;
   let timeColumnIndex = 0;
   let valueColumnIndex = 1;
 
@@ -15,7 +15,7 @@ export default function handleResponse(target, response) {
   }
 
   if (groupByColumnIndexes && groupByColumnIndexes.length && !_.some(groupByColumnIndexes, -1)) {
-    let groupedResponse = _.groupBy(response.data.rows, row => {
+    let groupedResponse = _.groupBy(result.rows, row => {
       // Construct groupBy key from Group By columns, for example:
       // [metric, host] => 'metric host'
       return _.map(groupByColumnIndexes, columnIndex => {
@@ -36,7 +36,7 @@ export default function handleResponse(target, response) {
       };
     });
   } else {
-    let datapoints = _.map(response.data.rows, row => {
+    let datapoints = _.map(result.rows, row => {
       return [
         Number(row[valueColumnIndex]), // value
         Number(row[timeColumnIndex])  // timestamp

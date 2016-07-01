@@ -9,6 +9,8 @@ export class CrateDatasource {
   type: string;
   url: string;
   name: string;
+  basicAuth: string;
+  withCredentials: boolean;
   schema: string;
   table: string;
   defaultTimeColumn: string;
@@ -24,6 +26,8 @@ export class CrateDatasource {
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
     this.name = instanceSettings.name;
+    this.basicAuth = instanceSettings.basicAuth;
+    this.withCredentials = instanceSettings.withCredentials;
     this.schema = instanceSettings.jsonData.schema;
     this.table = instanceSettings.jsonData.table;
     this.defaultTimeColumn = instanceSettings.jsonData.timeColumn;
@@ -49,13 +53,13 @@ export class CrateDatasource {
       } else {
         if (target.rawQuery) {
           return this._sql_query(target.query, [timeFrom, timeTo])
-            .then(response => {
-              return handleResponse(target, response);
+            .then(result => {
+              return handleResponse(target, result);
             });
         } else {
           return this._sql_query(this.queryBuilder.build(target), [timeFrom, timeTo])
-            .then(response => {
-              return handleResponse(target, response);
+            .then(result => {
+              return handleResponse(target, result);
             });
         }
       }
@@ -73,16 +77,12 @@ export class CrateDatasource {
    * error details.
    */
   testDatasource() {
-    return this.backendSrv.datasourceRequest({
-      url: this.url + '/',
-      method: 'GET'
-    }).then(response => {
-      if (response.status === 200) {
-        let cluster_name = response.data.cluster_name;
-        let crate_version = response.data.version.number;
+    return this._get().then(response => {
+      if (response.$$status === 200) {
         return {
           status: "success",
-          message: "Cluster: " + cluster_name + ", version: " + crate_version,
+          message: "Cluster: " + response.cluster_name +
+            ", version: " + response.version.number,
           title: "Success"
         };
       }
@@ -108,20 +108,46 @@ export class CrateDatasource {
    * @return
    */
   _sql_query(query: string, args: any[] = []) {
-    return this.backendSrv.datasourceRequest({
-      url: this.url + '/_sql',
-      data: {
-        "stmt": query,
-        "args": args
-      },
-      method: 'POST',
+    let data = {
+      "stmt": query,
+      "args": args
+    };
+    return this._post('/_sql', data);
+  }
+
+  _request(method: string, url: string, data?: any) {
+    let options = {
+      url: this.url + "/" + url,
+      method: method,
+      data: data,
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       }
-    }).then(result => {
-      return result;
-    }, error => {
-      return error;
+    };
+
+    if (this.basicAuth || this.withCredentials) {
+      options["withCredentials"] = true;
+    }
+    if (this.basicAuth) {
+      options.headers["Authorization"] = this.basicAuth;
+    }
+
+    return this.backendSrv.datasourceRequest(options);
+  }
+
+  _get(url = "") {
+    return this._request('GET', url).then(response => {
+      response.data.$$status = response.status;
+      response.data.$$config = response.config;
+      return response.data;
+    });
+  }
+
+  _post(url: string, data?: any) {
+    return this._request('POST', url, data).then(response => {
+      response.data.$$status = response.status;
+      response.data.$$config = response.config;
+      return response.data;
     });
   }
 

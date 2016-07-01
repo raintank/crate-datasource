@@ -56,7 +56,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
   crateQuery(query) {
     return this.datasource._sql_query(query).then(response => {
-      return response.data.rows;
+      return response.rows;
     });
   }
 

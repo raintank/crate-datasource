@@ -60,9 +60,9 @@
           custom="false"
           css-class="width-10">
         </metric-segment-model>
-        <metric-segment-model ng-if="ctrl.getMetricAggDef(agg.type).requiresColumn"
+        <metric-segment-model ng-if="true"
           property="agg.column"
-          get-options="ctrl.getColumns()"
+          get-options="ctrl.getColumns(ctrl.getMetricAggDef(agg.type).allValue, !ctrl.getMetricAggDef(agg.type).anyDataType)"
           on-change="ctrl.onChangeInternal()"
           css-class="width-12">
         </metric-segment-model>

@@ -64,6 +64,15 @@ export class CrateQueryBuilder {
     return query;
   }
 
+  getNumericColumnsQuery() {
+    return "SELECT column_name " +
+           "FROM information_schema.columns " +
+           "WHERE schema_name = '" + this.schema + "' " +
+             "AND table_name = '" + this.table + "' " +
+             "AND data_type in ('integer', 'long', 'short', 'double', 'float', 'byte') " +
+           "ORDER BY 1";
+  }
+
   /**
    * Builds SQL query for getting unique values for given column.
    * @param  {string}  column  Column name
@@ -81,7 +90,11 @@ export class CrateQueryBuilder {
 
   private renderMetricAggs(metricAggs): string {
     let renderedAggs = _.map(metricAggs, (agg) => {
-      return agg.type + "(" + agg.column + ")";
+      if (agg.type === 'count_distinct') {
+        return "count(distinct " + agg.column + ")";
+      } else {
+        return agg.type + "(" + agg.column + ")";
+      }
     });
     if (renderedAggs.length) {
       return renderedAggs.join(', ');

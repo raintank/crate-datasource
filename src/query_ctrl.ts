@@ -112,12 +112,20 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   // Query suggestions //
   ///////////////////////
 
-  getColumns() {
+  getColumns(allValue?: boolean, onlyNumeric?: boolean) {
+    let query;
+    if (onlyNumeric) {
+      query = this.crateQueryBuilder.getNumericColumnsQuery();
+    } else {
+      query = this.crateQueryBuilder.getColumnsQuery();
+    }
     let self = this;
-    return this.crateQuery(this.crateQueryBuilder.getColumnsQuery())
-      .then(rows => {
-        return self.transformToSegments(_.flatten(rows));
-      });
+    return this.crateQuery(query).then(rows => {
+      if (allValue) {
+        rows.splice(0, 0, '*');
+      }
+      return self.transformToSegments(_.flatten(rows));
+    });
   }
 
   getGroupByColumns() {

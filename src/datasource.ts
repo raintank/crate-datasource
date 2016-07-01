@@ -2,6 +2,7 @@
 
 import _ from 'lodash';
 import * as dateMath from 'app/core/utils/datemath';
+import moment from 'moment';
 import {CrateQueryBuilder} from './query_builder';
 import handleResponse from './response_handler';
 
@@ -46,22 +47,25 @@ export class CrateDatasource {
   query(options) {
     let timeFrom = Math.ceil(dateMath.parse(options.range.from));
     let timeTo = Math.ceil(dateMath.parse(options.range.to));
+    let interval = convertToCrateInterval(options.interval);
 
     let queries = _.map(options.targets, target => {
       if (target.hide || (target.rawQuery && !target.query)) {
         return [];
       } else {
+        let query: string;
         if (target.rawQuery) {
-          return this._sql_query(target.query, [timeFrom, timeTo])
-            .then(result => {
-              return handleResponse(target, result);
-            });
+          query = target.query;
         } else {
-          return this._sql_query(this.queryBuilder.build(target), [timeFrom, timeTo])
-            .then(result => {
-              return handleResponse(target, result);
-            });
+          if (target.timeInterval !== 'auto') {
+            interval = target.timeInterval;
+          }
+          query = this.queryBuilder.build(target, interval);
         }
+        return this._sql_query(query, [timeFrom, timeTo])
+          .then(result => {
+            return handleResponse(target, result);
+          });
       }
     });
     return this.$q.all(_.flatten(queries)).then(result => {
@@ -150,5 +154,22 @@ export class CrateDatasource {
       return response.data;
     });
   }
+}
 
+function convertToCrateInterval(grafanaInterval) {
+  let crateIntervals = [
+    {shorthand: 's', value: 'second'},
+    {shorthand: 'm', value: 'minute'},
+    {shorthand: 'h', value: 'hour'},
+    {shorthand: 'd', value: 'day'},
+    {shorthand: 'w', value: 'week'},
+    {shorthand: 'M', value: 'month'},
+    {shorthand: 'y', value: 'year'}
+  ];
+  let intervalRegex = /([\d]*)([smhdwMy])/;
+  let parsedInterval = intervalRegex.exec(grafanaInterval);
+  let value = Number(parsedInterval[1]);
+  let unit = parsedInterval[2];
+  let crateInterval = _.find(crateIntervals, {'shorthand': unit});
+  return crateInterval ? crateInterval.value : undefined;
 }

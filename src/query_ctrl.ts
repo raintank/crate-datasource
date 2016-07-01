@@ -13,8 +13,8 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   groupBySegments: any;
   whereSegments: any;
   removeWhereSegment: any;
-
   operators: any;
+  timeIntervals: any[];
   aliasBySegment: any;
 
   constructor($scope, $injector, private $q, private uiSegmentSrv)  {
@@ -33,12 +33,25 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       regex: ['~', '!~']
     };
 
+    this.timeIntervals = [
+      {name: 'Auto',    value: 'auto'},
+      {name: 'Second',  value: 'second'},
+      {name: 'Minute',  value: 'minute'},
+      {name: 'Hour',    value: 'hour'},
+      {name: 'Day',     value: 'day'},
+      {name: 'Week',    value: 'week'},
+      {name: 'Month',   value: 'month'},
+      {name: 'Quarter', value: 'quarter'},
+      {name: 'Year',    value: 'year'}
+    ];
+
     var target_defaults = {
       metricAggs: [
         {type: 'avg', column: 'value'}
       ],
       groupByColumns: [],
       whereClauses: [],
+      timeInterval: ds.defaultGroupInterval,
       aliasBy: "*"
     };
     _.defaults(this.target, target_defaults);

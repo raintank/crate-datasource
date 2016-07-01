@@ -8,13 +8,17 @@ export class CrateConfigCtrl {
   current: any;
 
   timeIntervals: any[] = [
-    {name: '10 seconds', value: '10s'},
-    {name: '1 minute',   value: '1m'},
-    {name: '10 minutes', value: '10m'},
-    {name: '1 hour',     value: '1h'}
+    {name: 'Second',  value: 'second'},
+    {name: 'Minute',  value: 'minute'},
+    {name: 'Hour',    value: 'hour'},
+    {name: 'Day',     value: 'day'},
+    {name: 'Week',    value: 'week'},
+    {name: 'Month',   value: 'month'},
+    {name: 'Quarter', value: 'quarter'},
+    {name: 'Year',    value: 'year'}
   ];
 
   constructor($scope) {
-    this.current.jsonData.timeInterval = this.current.jsonData.timeInterval || this.timeIntervals[0].value;
+    this.current.jsonData.timeInterval = this.current.jsonData.timeInterval || this.timeIntervals[1].value;
   }
 }

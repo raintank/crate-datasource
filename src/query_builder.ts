@@ -20,12 +20,14 @@ export class CrateQueryBuilder {
 
   /**
    * Builds Crate SQL query from given target object.
-   * @param  {any}    target  Target object.
-   * @return {string}         SQL query.
+   * @param  {any}     target         Target object.
+   * @param  {string}  groupInterval  Crate interval for date_trunc() function.
+   * @return {string}                 SQL query.
    */
-  build(target) {
+  build(target: any, groupInterval = this.defaultGroupInterval) {
     // SELECT
-    let query = "SELECT date_trunc('minute', " + this.defaultTimeColumn + ") as time, " +
+    let query = "SELECT date_trunc('" + groupInterval + "', " +
+      this.defaultTimeColumn + ") as time, " +
       this.renderMetricAggs(target.metricAggs);
 
     // Add GROUP BY columns to SELECT statement.

@@ -91,7 +91,10 @@ export class CrateQueryBuilder {
   }
 
   private renderMetricAggs(metricAggs): string {
-    let renderedAggs = _.map(metricAggs, (agg) => {
+    let enabledAggs = _.filter(metricAggs, (agg) => {
+      return !agg.hide;
+    });
+    let renderedAggs = _.map(enabledAggs, (agg) => {
       if (agg.type === 'count_distinct') {
         return "count(distinct " + agg.column + ")";
       } else {

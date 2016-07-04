@@ -117,6 +117,11 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.onChangeInternal();
   }
 
+  toggleShowMetric(agg): void {
+    agg.hide = !agg.hide;
+    this.onChangeInternal();
+  }
+
   toggleEditorMode(): void {
     this.target.rawQuery = !this.target.rawQuery;
   }

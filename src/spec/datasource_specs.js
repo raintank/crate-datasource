@@ -1,5 +1,6 @@
 //import {describe, beforeEach, it, sinon, expect} from '../utils/test_common';
 import {Datasource} from '../module';
+import {convertToCrateInterval} from '../datasource';
 import Q from "q";
 
 describe('CrateDatasource', function() {
@@ -101,6 +102,41 @@ describe('CrateDatasource', function() {
         done();
       });
     });
-
   });
+
+  describe('When converting to Crate interval', function() {
+
+    beforeEach(function() {
+    });
+
+    it('should return proper interval for date_trunc() function', function(done) {
+      var test_map = [
+        ['10s', 'second'],
+        ['20s', 'second'],
+        ['30s', 'second'],
+        ['40s', 'second'],
+        ['50s', 'second'],
+        ['59s', 'second'],
+
+        ['1m',  'minute'],
+        ['1h',  'hour'],
+        ['1d',  'day'],
+        ['1w',  'week'],
+        ['1M',  'month'],
+        ['1y',  'year']
+      ];
+
+      var test_intervals = test_map.map(function(value) {
+        return value[0];
+      });
+      var expected_result = test_map.map(function(value) {
+        return value[1];
+      });
+      var result = test_intervals.map(convertToCrateInterval);
+
+      expect(result).to.deep.equal(expected_result);
+      done();
+    });
+  });
+
 });

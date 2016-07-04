@@ -156,7 +156,7 @@ export class CrateDatasource {
   }
 }
 
-function convertToCrateInterval(grafanaInterval) {
+export function convertToCrateInterval(grafanaInterval) {
   let crateIntervals = [
     {shorthand: 's', value: 'second'},
     {shorthand: 'm', value: 'minute'},

@@ -11,11 +11,13 @@ export class CrateQueryBuilder {
   constructor(schema: string,
               table: string,
               defaultTimeColumn: string,
-              defaultGroupInterval: string) {
+              defaultGroupInterval: string,
+              private templateSrv) {
     this.schema = schema;
     this.table = table;
     this.defaultTimeColumn = defaultTimeColumn;
     this.defaultGroupInterval = defaultGroupInterval;
+    this.templateSrv = templateSrv;
   }
 
   /**
@@ -116,11 +118,26 @@ export class CrateQueryBuilder {
       }
 
       // Put non-numeric values into quotes.
-      let value = _.isNumber(clauseObj.value) ? Number(clauseObj.value) : "'" + clauseObj.value + "'";
+      let value: string;
+      if (_.isNumber(clauseObj.value) ||
+          this.containsVariable(clauseObj.value)) {
+        value = clauseObj.value;
+      } else {
+        value = "'" + clauseObj.value + "'";
+      }
       rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + value;
       return rendered;
     });
     return renderedClauses.join(' ');
+  }
+
+  // Check for template variables
+  private containsVariable(str: string): boolean {
+    let variables = _.map(this.templateSrv.variables, 'name');
+    let self = this;
+    return _.some(variables, variable => {
+      return self.templateSrv.containsVariable(str, variable);
+    });
   }
 }
 

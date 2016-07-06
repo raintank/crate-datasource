@@ -17,16 +17,18 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   timeIntervals: any[];
   aliasBySegment: any;
 
-  constructor($scope, $injector, private $q, private uiSegmentSrv)  {
+  constructor($scope, $injector, private $q, private uiSegmentSrv, private templateSrv)  {
     super($scope, $injector);
 
     this.uiSegmentSrv = uiSegmentSrv;
+    this.templateSrv = templateSrv;
 
     let ds = this.datasource;
     this.crateQueryBuilder = new CrateQueryBuilder(ds.schema,
                                                    ds.table,
                                                    ds.defaultTimeColumn,
-                                                   ds.defaultGroupInterval);
+                                                   ds.defaultGroupInterval,
+                                                   templateSrv);
 
     this.operators = {
       compare: ['<', '>', '<=', '>=', '=', '<>', '!=', 'like'],

@@ -4,10 +4,17 @@ import {CrateQueryBuilder} from '../query_builder';
 describe('CrateQueryBuilder', function() {
   var ctx = {};
 
+  beforeEach(function() {
+    ctx.templateSrv = {
+      containsVariable: (str, variable) => {return true;},
+      variables: []
+    };
+    ctx.queryBuilder = new CrateQueryBuilder('stats', 'nodes', 'ts', 'minute', ctx.templateSrv);
+  });
+
   describe('When building query', function() {
 
     beforeEach(function() {
-      ctx.queryBuilder = new CrateQueryBuilder('stats', 'nodes', 'ts', 'minute');
       ctx.target = {
         metricAggs: [
           {type: 'avg', column: 'load'}
@@ -72,10 +79,6 @@ describe('CrateQueryBuilder', function() {
 
   describe('When building columns query', function() {
 
-    beforeEach(function() {
-      ctx.queryBuilder = new CrateQueryBuilder('stats', 'nodes', 'ts', '1m');
-    });
-
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT column_name " +
                            "FROM information_schema.columns " +
@@ -89,10 +92,6 @@ describe('CrateQueryBuilder', function() {
   });
 
   describe('When building values query', function() {
-
-    beforeEach(function() {
-      ctx.queryBuilder = new CrateQueryBuilder('stats', 'nodes', 'ts', '1m');
-    });
 
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT DISTINCT load " +

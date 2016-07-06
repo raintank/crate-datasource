@@ -36,7 +36,8 @@ export class CrateDatasource {
     this.queryBuilder = new CrateQueryBuilder(this.schema,
                                               this.table,
                                               this.defaultTimeColumn,
-                                              this.defaultGroupInterval);
+                                              this.defaultGroupInterval,
+                                              templateSrv);
 
     this.$q = $q;
     this.backendSrv = backendSrv;
@@ -62,6 +63,7 @@ export class CrateDatasource {
           }
           query = this.queryBuilder.build(target, interval);
         }
+        query = this.templateSrv.replace(query);
         return this._sql_query(query, [timeFrom, timeTo])
           .then(result => {
             return handleResponse(target, result);
@@ -102,6 +104,22 @@ export class CrateDatasource {
         message: message,
         title: "Error"
       };
+    });
+  }
+
+  metricFindQuery(query: string) {
+    if (!query) {
+      return this.$q.when([]);
+    }
+
+    query = this.templateSrv.replace(query);
+    return this._sql_query(query).then(result => {
+      return _.map(_.flatten(result.rows), row => {
+        return {
+          text: row,
+          value: "'" + row + "'"
+        };
+      });
     });
   }
 

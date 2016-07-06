@@ -30,10 +30,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
                                                    ds.defaultGroupInterval,
                                                    templateSrv);
 
-    this.operators = {
-      compare: ['<', '>', '<=', '>=', '=', '<>', '!=', 'like'],
-      regex: ['~', '!~']
-    };
+    this.operators = ['<', '>', '<=', '>=', '=', '<>', '!=', 'in', 'like', '~', '!~'];
 
     this.timeIntervals = [
       {name: 'Auto',    value: 'auto'},
@@ -168,7 +165,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       return this.$q.when([this.uiSegmentSrv.newSegment('AND'), this.uiSegmentSrv.newSegment('OR')]);
     }
     if (segment.type === 'operator') {
-      return this.$q.when(this.uiSegmentSrv.newOperators(this.operators.compare));
+      return this.$q.when(this.uiSegmentSrv.newOperators(this.operators));
     }
 
     if (segment.type === 'key' || segment.type === 'plus-button') {

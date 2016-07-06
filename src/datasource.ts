@@ -33,15 +33,18 @@ export class CrateDatasource {
     this.table = instanceSettings.jsonData.table;
     this.defaultTimeColumn = instanceSettings.jsonData.timeColumn;
     this.defaultGroupInterval = instanceSettings.jsonData.timeInterval;
-    this.queryBuilder = new CrateQueryBuilder(this.schema,
-                                              this.table,
-                                              this.defaultTimeColumn,
-                                              this.defaultGroupInterval,
-                                              templateSrv);
 
     this.$q = $q;
     this.backendSrv = backendSrv;
     this.templateSrv = templateSrv;
+    // Custom value formatter
+    this.templateSrv.formatValue = formatCrateValue;
+
+    this.queryBuilder = new CrateQueryBuilder(this.schema,
+                                              this.table,
+                                              this.defaultTimeColumn,
+                                              this.defaultGroupInterval,
+                                              this.templateSrv);
   }
 
   // Called once per panel (graph)
@@ -172,6 +175,17 @@ export class CrateDatasource {
       return response.data;
     });
   }
+}
+
+// Special value formatter for Crate.
+// Render multi-value variables for using in SQL "IN" expression:
+// $host => ('backend01', 'backend02')
+// WHERE host IN $host => WHERE host IN ('backend01', 'backend02')
+function formatCrateValue(value, format, variable) {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return '(' + value.join(', ') + ')';
 }
 
 export function convertToCrateInterval(grafanaInterval) {

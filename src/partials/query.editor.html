@@ -111,20 +111,20 @@
 
     <div class="gf-form-inline">
       <div class="gf-form">
-        <span class="gf-form-label query-keyword width-13">GROUP BY Time Interval</span>
+        <span class="gf-form-label query-keyword width-13">Group By Time Interval</span>
         <select class="gf-form-input gf-size-auto"
           ng-model="ctrl.target.timeInterval"
           ng-options="f.value as f.name for f in ctrl.timeIntervals"
           ng-change="ctrl.onChangeInternal()">
         </select>
       </div>
-      <div class="gf-form">
+      <!-- <div class="gf-form">
         <label class="gf-form-label query-keyword width-7">ALIAS BY</label>
         <metric-segment segment="ctrl.aliasBySegment"
           get-options="ctrl.getColumns()"
           on-change="ctrl.aliasBySegmentChanged()">
         </metric-segment>
-      </div>
+      </div> -->
       <div class="gf-form gf-form--grow">
         <div class="gf-form-label gf-form-label--grow"></div>
       </div>

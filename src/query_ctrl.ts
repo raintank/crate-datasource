@@ -141,7 +141,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       if (allValue) {
         rows.splice(0, 0, '*');
       }
-      return self.transformToSegments(_.flatten(rows));
+      return self.transformToSegments(_.flatten(rows), true);
     });
   }
 
@@ -156,11 +156,12 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     let self = this;
     return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit))
       .then(rows => {
-        return self.transformToSegments(_.flatten(rows));
+        return self.transformToSegments(_.flatten(rows), true);
       });
   }
 
   getColumnsOrValues(segment, index) {
+    var self = this;
     if (segment.type === 'condition') {
       return this.$q.when([this.uiSegmentSrv.newSegment('AND'), this.uiSegmentSrv.newSegment('OR')]);
     }
@@ -174,9 +175,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
         return columns;
       });
     } else if (segment.type === 'value') {
-      return this.getValues(this.whereSegments[index - 2].value).then(columns => {
-        return columns;
-      });
+      return this.getValues(this.whereSegments[index - 2].value);
     }
   }
 
@@ -275,13 +274,19 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     }
   }
 
-  transformToSegments(results) {
+  transformToSegments(results, addTemplateVars?: boolean) {
     var segments = _.map(_.flatten(results), value => {
       return this.uiSegmentSrv.newSegment({
         value: value.toString(),
         expandable: false
       });
     });
+
+    if (addTemplateVars) {
+      for (let variable of this.templateSrv.variables) {
+        segments.unshift(this.uiSegmentSrv.newSegment({ type: 'template', value: '$' + variable.name, expandable: true }));
+      }
+    }
     return segments;
   }
 

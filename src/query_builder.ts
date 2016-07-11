@@ -51,7 +51,12 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
 
-    query += " ORDER BY time ASC";
+    // If GROUP BY specified, sort also by selected columns
+    query += " ORDER BY time";
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+    query += " ASC";
 
     return query;
   }

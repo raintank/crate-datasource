@@ -57,7 +57,7 @@ describe('CrateQueryBuilder', function() {
       done();
     });
 
-    it('should add GROUP BY columns to SELECT expression', function(done) {
+    it('should add GROUP BY columns to SELECT and ORDER BY expressions', function(done) {
       ctx.target = {
         metricAggs: [
           {type: 'avg', column: 'load'}
@@ -70,7 +70,7 @@ describe('CrateQueryBuilder', function() {
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE ts >= ? AND ts <= ? " +
                            "GROUP BY time, hostname " +
-                           "ORDER BY time ASC";
+                           "ORDER BY time, hostname ASC";
       var query = ctx.queryBuilder.build(ctx.target);
       expect(query).to.equal(expected_query);
       done();

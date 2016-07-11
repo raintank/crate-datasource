@@ -30,7 +30,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE time >= ? AND time <= ? " +
+                           "WHERE ts >= ? AND ts <= ? " +
                              "AND hostname = 'backend01' " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
@@ -47,7 +47,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE time >= ? AND time <= ? " +
+                           "WHERE ts >= ? AND ts <= ? " +
                              "AND hostname = 'backend01' " +
                              "OR hostname = 'frontend01' " +
                            "GROUP BY time " +
@@ -68,7 +68,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load), hostname " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE time >= ? AND time <= ? " +
+                           "WHERE ts >= ? AND ts <= ? " +
                            "GROUP BY time, hostname " +
                            "ORDER BY time ASC";
       var query = ctx.queryBuilder.build(ctx.target);

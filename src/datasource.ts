@@ -137,7 +137,7 @@ export class CrateDatasource {
       "stmt": query,
       "args": args
     };
-    return this._post('/_sql', data);
+    return this._post('_sql', data);
   }
 
   _request(method: string, url: string, data?: any) {

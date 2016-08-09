@@ -27,10 +27,22 @@ export class CrateQueryBuilder {
    * @return {string}                 SQL query.
    */
   build(target: any, groupInterval = this.defaultGroupInterval) {
+    let enabledAggs = _.filter(target.metricAggs, (agg) => {
+      return !agg.hide;
+    });
+    let rawAggs = _.filter(enabledAggs, {type: 'raw'});
+
     // SELECT
-    let query = "SELECT date_trunc('" + groupInterval + "', " +
-      this.defaultTimeColumn + ") as time, " +
-      this.renderMetricAggs(target.metricAggs);
+    let query: string;
+    if (rawAggs.length) {
+      console.log('RAW');
+      query = "SELECT " + this.defaultTimeColumn + " as time, " +
+        this.renderMetricAggs(target.metricAggs);
+    } else {
+      query = "SELECT date_trunc('" + groupInterval + "', " +
+        this.defaultTimeColumn + ") as time, " +
+        this.renderMetricAggs(target.metricAggs);
+    }
 
     // Add GROUP BY columns to SELECT statement.
     if (target.groupByColumns && target.groupByColumns.length) {
@@ -49,6 +61,9 @@ export class CrateQueryBuilder {
     query += " GROUP BY time";
     if (target.groupByColumns && target.groupByColumns.length) {
       query += ", " + target.groupByColumns.join(', ');
+    }
+    if (rawAggs.length) {
+      query += ", " + _.map(rawAggs, 'column').join(', ');
     }
 
     // If GROUP BY specified, sort also by selected columns
@@ -105,6 +120,8 @@ export class CrateQueryBuilder {
     let renderedAggs = _.map(enabledAggs, (agg) => {
       if (agg.type === 'count_distinct') {
         return "count(distinct " + agg.column + ")";
+      } else if (agg.type === 'raw') {
+        return agg.column;
       } else {
         return agg.type + "(" + agg.column + ")";
       }

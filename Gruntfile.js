@@ -39,13 +39,13 @@ module.exports = function(grunt) {
 
     typescript: {
       build: {
-        src: ['src/**/*.ts', "!src/spec/**/*", "!**/*.d.ts"],
+        src: ['dist/**/*.ts', "!src/spec/**/*", "!**/*.d.ts"],
         dest: 'dist/',
         options: {
           module: 'system', //or commonjs
           target: 'es3', //or es5
-          rootDir: 'src/',
-          sourceRoot: 'src/',
+          rootDir: 'dist/',
+          keepDirectoryHierarchy: false,
           declaration: true,
           emitDecoratorMetadata: true,
           experimentalDecorators: true,

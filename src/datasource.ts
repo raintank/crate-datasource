@@ -17,6 +17,7 @@ export class CrateDatasource {
   defaultTimeColumn: string;
   defaultGroupInterval: string;
   queryBuilder: CrateQueryBuilder;
+  crateConnection: CrateConnection;
 
 
   constructor(instanceSettings,
@@ -25,7 +26,12 @@ export class CrateDatasource {
               private templateSrv) {
 
     this.type = instanceSettings.type;
+
     this.url = instanceSettings.url;
+    let additional_urls = instanceSettings.jsonData.additionalUrls.split(',');
+    let multiply_urls = _.uniq([this.url].concat(additional_urls));
+    this.crateConnection = new CrateConnection(multiply_urls);
+
     this.name = instanceSettings.name;
     this.basicAuth = instanceSettings.basicAuth;
     this.withCredentials = instanceSettings.withCredentials;
@@ -141,8 +147,15 @@ export class CrateDatasource {
   }
 
   _request(method: string, url: string, data?: any) {
+    let baseUrl = this.url;
+
+    // Use multiple hosts if direct http access used
+    if (isDirectAccess(this.url)) {
+      baseUrl = this.crateConnection.getUrl();
+    }
+
     let options = {
-      url: this.url + "/" + url,
+      url: baseUrl + "/" + url,
       method: method,
       data: data,
       headers: {
@@ -174,6 +187,44 @@ export class CrateDatasource {
       response.data.$$config = response.config;
       return response.data;
     });
+  }
+}
+
+export class CrateConnection {
+  urlList: string[];
+  mainUrl: string;
+
+  private currentUrlIndex: number;
+
+  constructor(urlList) {
+    this.urlList = urlList;
+
+    if (urlList.length) {
+      this.mainUrl = urlList[0];
+    }
+    this.currentUrlIndex = 0;
+  }
+
+  getUrl(): string {
+    return this.urlList[this.getNextIndex()];
+  }
+
+  private getNextIndex(): number {
+    if (this.currentUrlIndex === this.urlList.length) {
+      this.currentUrlIndex = 0;
+      return 0;
+    } else {
+      return this.currentUrlIndex++;
+    }
+  }
+}
+
+function isDirectAccess(url): boolean {
+  let proxyUrlPattern = /^\/api/;
+  if (url.search(proxyUrlPattern) !== -1) {
+    return false;
+  } else {
+    return true;
   }
 }
 

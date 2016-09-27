@@ -6,11 +6,17 @@ export default function handleResponse(target, result) {
   let columns = result.cols;
   let timeColumnIndex = 0;
   let valueColumnIndex = 1;
+  let groupByColumnIndexes, selectColumnIndexes;
 
-  let groupByColumnIndexes;
   if (target.groupByColumns.length) {
     groupByColumnIndexes = _.map(target.groupByColumns, groupByCol => {
       return _.indexOf(columns, groupByCol);
+    });
+  }
+
+  if (target.metricAggs.length) {
+    selectColumnIndexes = _.map(target.metricAggs, metricAgg => {
+      return _.indexOf(columns, makeColName(metricAgg.type, metricAgg.column));
     });
   }
 
@@ -23,18 +29,20 @@ export default function handleResponse(target, result) {
       }).join(' ');
     });
 
-    return _.map(groupedResponse, (rows, key) => {
-      let datapoints = _.map(rows, row => {
-        return [
-          Number(row[valueColumnIndex]), // value
-          Number(row[timeColumnIndex])  // timestamp
-        ];
+    return _.flatten(_.map(groupedResponse, (rows, key) => {
+      return _.map(selectColumnIndexes, (valueIndex) => {
+        let datapoints = _.map(rows, row => {
+          return [
+            Number(row[valueIndex]), // value
+            Number(row[timeColumnIndex])  // timestamp
+          ];
+        });
+        return {
+          target: key + ': ' + columns[valueIndex],
+          datapoints: datapoints
+        };
       });
-      return {
-        target: key,
-        datapoints: datapoints
-      };
-    });
+    }));
   } else {
     let datapoints = _.map(result.rows, row => {
       return [
@@ -48,4 +56,8 @@ export default function handleResponse(target, result) {
       datapoints: datapoints
     }];
   }
+}
+
+function makeColName(type, column) {
+  return type + '(' + column + ')';
 }

@@ -106,10 +106,10 @@ describe('Response Handler', function() {
       expect(result.length).to.equal(2);
       expect(result[0]).to.have.property('target');
       expect(result[0]).to.have.property('datapoints');
-      expect(result[0].target).to.equal('backend01');
+      expect(result[0].target).to.equal('backend01: avg(value)');
       expect(result[1]).to.have.property('target');
       expect(result[1]).to.have.property('datapoints');
-      expect(result[1].target).to.equal('backend02');
+      expect(result[1].target).to.equal('backend02: avg(value)');
       done();
     });
 
@@ -149,7 +149,7 @@ describe('Response Handler', function() {
         [1.2562332153320312,1466640780000],
         [1.1889413595199585,1466640840000]
       ]);
-      expect(result[0].target).to.equal('backend01 load1');
+      expect(result[0].target).to.equal('backend01 load1: avg(value)');
       done();
     });
 

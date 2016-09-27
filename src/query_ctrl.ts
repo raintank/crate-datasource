@@ -184,7 +184,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   }
 
   getMetricAggDef(aggType) {
-    return _.findWhere(this.getMetricAggTypes(), { value: aggType });
+    return _.find(this.getMetricAggTypes(), { value: aggType });
   }
 
   whereSegmentUpdated(segment, index) {

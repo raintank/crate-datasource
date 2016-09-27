@@ -1,13 +1,12 @@
 # Grafana Data Source Plugin for Crate
 
 
-[![Crate.io logo](crate-logo.png)](https://crate.io)
+[![Crate.io logo](https://raw.githubusercontent.com/raintank/crate-datasource/master/crate-logo.png)](https://crate.io)
 
 ## What Is Crate?
 Crate is an open source fast, scalable, easy to use SQL database that plays nicely with containers like Docker. It feels like the SQL databases you know, but makes scaling and operating your database ridiculously easy - regardless of the volume, complexity, or type of data. It ingests millions of records per second for time series setups and delivers analytics results in sub-second real time, which makes it a perfect data source for Grafana.
 
 ## The Crate Datasource Plugin for Grafana
-Full documentation available [here.](http://docs.grafana.org/datasources/crate)
 
 ### Features
 Enables Crate clusters to act as data sources for your Grafana deployment, providing real-time analytical and timeseries data with SQL.
@@ -18,7 +17,7 @@ Enables Crate clusters to act as data sources for your Grafana deployment, provi
 
 
 ### Setup
-![](crate-datasource-add-src.png)
+![](https://raw.githubusercontent.com/raintank/crate-datasource/master/src/img/crate-datasource-add-src.png)
 
   > The screenshot shows a connection to http://localhost:44200 which is a test database for the purpose of this tutorial. Crate's default binding is to http://localhost:4200.
 
@@ -57,7 +56,7 @@ Time Column | Time series column, has to be of type `timestamp` in Crate.
 Default grouping interval | The grouping resolution (can be changed by query).
 
 
-![](crate-datasource-nonvalidation.png)
+![](https://raw.githubusercontent.com/raintank/crate-datasource/master/src/img/crate-datasource-nonvalidation.png)
 
 > Grafana will not check (yet) if the `time column`, the `schema`, or the `table` exists. Be sure to double check these values to avoid running into problems later.
 
@@ -66,7 +65,7 @@ Default grouping interval | The grouping resolution (can be changed by query).
 After adding a new dashboard and having the query editor open, define and run the queries you like - it's just like other SQL databases. For example we have added the [NYC yellow cab data set](http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml) in our cluster to show you something interesting!
 
 
-![](crate-datasource-graph.png)
+![](https://raw.githubusercontent.com/raintank/crate-datasource/master/src/img/crate-datasource-graph.png)
 
 > This graph shows the number of yellow cab pick ups between on a weekend in August 2013.
 
@@ -75,7 +74,7 @@ After adding a new dashboard and having the query editor open, define and run th
 Grafana runs queries almost immediately after change and it will also auto-complete columns or previous values. However, sometimes queries might still be invalid and Grafana will then show a small exclamation mark in the top corner of the graph. Clicking on it will give you the error message.
 
 
-![](crate-datasource-error.png)
+![](https://raw.githubusercontent.com/raintank/crate-datasource/master/src/img/crate-datasource-error.png)
 
 The Crate data source for Grafana supports a great range of scalar functions and operators. To read more about them, install or scale a cluster, or even to contribute to Crate, please have a look at the [official Crate documentation](https://crate.io/docs)
 
@@ -92,7 +91,6 @@ The Crate data source for Grafana supports a great range of scalar functions and
 
 ## Getting Help
 
-- Read more about the plugin [here](http://docs.grafana.org/datasources/crate/)
 - Read the Crate documentation [here](https://crate.io/docs)
 - Issues with the Grafana plugin can be reported or discussed [here](https://github.com/raintank/crate-datasource/issues)
 - Issues with Crate can be reported or discussed [here](https://github.com/crate/crate/issues)

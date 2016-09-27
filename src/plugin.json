@@ -3,8 +3,6 @@
   "id": "crate-datasource",
   "type": "datasource",
 
-  "staticRoot": ".",
-
   "partials": {
     "config": "public/app/plugins/datasource/crate/partials/config.html"
   },
@@ -19,8 +17,8 @@
       "url": "https://crate.io"
     },
     "logos": {
-      "small": "src/img/crate_logo.png",
-      "large": "src/img/crate_logo.png"
+      "small": "img/crate_logo.png",
+      "large": "img/crate_logo.png"
     },
     "links": [
       {"name": "GitHub", "url": "https://github.com/raintank/crate-datasource"},

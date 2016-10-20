@@ -1,0 +1,46 @@
+<datasource-http-settings
+	current="ctrl.current"
+	suggest-url="http://localhost:4200">
+</datasource-http-settings>
+
+<h3 class="page-heading">Crate details</h3>
+
+<div class="gf-form-group">
+	<div class="gf-form-inline">
+		<div class="gf-form max-width-15">
+			<span class="gf-form-label width-7">Schema</span>
+			<input class="gf-form-input" type="text"
+				ng-model='ctrl.current.jsonData.schema'
+				placeholder="doc" required>
+			</input>
+		</div>
+
+		<div class="gf-form max-width-19">
+			<span class="gf-form-label width-7">Table</span>
+			<input class="gf-form-input" type="text"
+				ng-model='ctrl.current.jsonData.table'
+				placeholder="stats" required>
+			</input>
+		</div>
+	</div>
+
+	<div class="gf-form-inline">
+		<div class="gf-form max-width-15">
+			<span class="gf-form-label width-7">Time column</span>
+			<input class="gf-form-input" type="text"
+				ng-model='ctrl.current.jsonData.timeColumn'
+				placeholder="timestamp"
+				ng-init="" required>
+			</input>
+		</div>
+
+		<div class="gf-form">
+			<span class="gf-form-label width-12">Default grouping interval</span>
+			<select class="gf-form-input gf-size-auto"
+				ng-model="ctrl.current.jsonData.timeInterval"
+				ng-options="f.value as f.name for f in ctrl.timeIntervals">
+			</select>
+		</div>
+	</div>
+
+</div>

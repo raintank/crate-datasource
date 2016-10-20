@@ -1,0 +1,35 @@
+{
+  "name": "Crate",
+  "id": "crate-datasource",
+  "type": "datasource",
+
+  "partials": {
+    "config": "public/app/plugins/datasource/crate/partials/config.html"
+  },
+
+  "metrics": true,
+  "annotations": false,
+
+  "info": {
+    "description": "Crate SQL Database datasource",
+    "author": {
+      "name": "Crate.IO",
+      "url": "https://crate.io"
+    },
+    "logos": {
+      "small": "img/crate_logo.png",
+      "large": "img/crate_logo.png"
+    },
+    "links": [
+      {"name": "GitHub", "url": "https://github.com/raintank/crate-datasource"},
+      {"name": "MIT License", "url": "https://github.com/raintank/crate-datasource/blob/master/LICENSE"}
+    ],
+    "version": "0.1.0",
+    "updated": "2016-07-10"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "3.x.x",
+    "plugins": []
+  }
+}

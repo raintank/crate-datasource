@@ -17,6 +17,7 @@ export class CrateDatasource {
   defaultTimeColumn: string;
   defaultGroupInterval: string;
   queryBuilder: CrateQueryBuilder;
+  CRATE_ROWS_LIMIT: number;
 
 
   constructor(instanceSettings,
@@ -45,32 +46,47 @@ export class CrateDatasource {
                                               this.defaultTimeColumn,
                                               this.defaultGroupInterval,
                                               this.templateSrv);
+
+    this.CRATE_ROWS_LIMIT = 10000;
   }
 
   // Called once per panel (graph)
   query(options) {
     let timeFrom = Math.ceil(dateMath.parse(options.range.from));
     let timeTo = Math.ceil(dateMath.parse(options.range.to));
-    let interval = convertToCrateInterval(options.interval);
+    let getInterval = this.$q.when(convertToCrateInterval(options.interval));
 
     let queries = _.map(options.targets, target => {
       if (target.hide || (target.rawQuery && !target.query)) {
         return [];
       } else {
-        let query: string;
+        let getQuery: any;
+
         if (target.rawQuery) {
-          query = target.query;
+          getQuery = this.$q.when(target.query);
         } else {
           if (target.timeInterval !== 'auto') {
-            interval = target.timeInterval;
+            getInterval = this.$q.when(target.timeInterval);
+          } else {
+            // Use SELECT count(*) query for calculating required time interval
+            // This is needed because Crate limit response to 10 000 rows.
+            getInterval = this._count_series_query(target, timeFrom, timeTo)
+              .then(count => {
+                let min_interval = (timeTo - timeFrom ) / (this.CRATE_ROWS_LIMIT / count);
+                return getMinCrateInterval(min_interval);
+              });
           }
-          query = this.queryBuilder.build(target, interval);
-        }
-        query = this.templateSrv.replace(query);
-        return this._sql_query(query, [timeFrom, timeTo])
-          .then(result => {
-            return handleResponse(target, result);
+          getQuery = getInterval.then(interval => {
+            return this.queryBuilder.build(target, interval)
           });
+        }
+        return getQuery.then(query => {
+          query = this.templateSrv.replace(query);
+          return this._sql_query(query, [timeFrom, timeTo])
+            .then(result => {
+              return handleResponse(target, result);
+            });
+        });
       }
     });
     return this.$q.all(_.flatten(queries)).then(result => {
@@ -78,6 +94,17 @@ export class CrateDatasource {
         data: _.flatten(result)
       };
     });
+  }
+
+  // Workaround for limit datapoints requested from Crate
+  // Count points returned by time series query
+  _count_series_query(target, timeFrom, timeTo) {
+    let query = this.queryBuilder.buildCountPointsQuery(target);
+    query = this.templateSrv.replace(query);
+    return this._sql_query(query, [timeFrom, timeTo])
+      .then(result => {
+        return result.rowcount;
+      });
   }
 
   /**
@@ -204,4 +231,22 @@ export function convertToCrateInterval(grafanaInterval) {
   let unit = parsedInterval[2];
   let crateInterval = _.find(crateIntervals, {'shorthand': unit});
   return crateInterval ? crateInterval.value : undefined;
+}
+
+function getMinCrateInterval(ms) {
+  let seconds = ms / 1000;
+  if (seconds > 60 * 60 * 24 * 30 * 3)
+    return 'year';
+  else if (seconds > 60 * 60 * 24 * 30) // TODO: check defenition of month interval
+    return 'quarter';
+  else if (seconds > 60 * 60 * 24 * 7)
+    return 'month';
+  else if (seconds > 60 * 60 * 24)
+    return 'week';
+  else if (seconds > 60 * 60)
+    return 'day';
+  else if (seconds > 60)
+    return 'hour';
+  else
+    return 'minute';
 }

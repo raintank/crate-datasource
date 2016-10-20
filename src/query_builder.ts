@@ -76,6 +76,47 @@ export class CrateQueryBuilder {
     return query;
   }
 
+  // workaround for limit datapoints requested from Crate
+  buildCountPointsQuery(target: any) {
+    let enabledAggs = _.filter(target.metricAggs, (agg) => {
+      return !agg.hide;
+    });
+    let rawAggs = _.filter(enabledAggs, {type: 'raw'});
+
+    // SELECT
+    let query: string;
+    let aggs: string;
+    let renderedAggs = _.map(enabledAggs, (agg) => {
+      return "count" + "(" + agg.column + ")";
+    });
+    if (renderedAggs.length) {
+      aggs = renderedAggs.join(', ');
+    } else {
+      aggs = "";
+    }
+
+    query = "SELECT count(*) " +
+      "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
+      "WHERE " + this.defaultTimeColumn + " >= ? AND " +
+        this.defaultTimeColumn + " <= ?";
+
+    // WHERE
+    if (target.whereClauses && target.whereClauses.length) {
+      query += " AND " + this.renderWhereClauses(target.whereClauses);
+    }
+
+    // GROUP BY
+    query += " GROUP BY ";
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += target.groupByColumns.join(', ');
+    }
+    if (rawAggs.length) {
+      query += ", " + _.map(rawAggs, 'column').join(', ');
+    }
+
+    return query;
+  }
+
   /**
    * Builds SQL query for getting available columns from table.
    * @return  {string}  SQL query.

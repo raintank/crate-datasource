@@ -33,6 +33,17 @@ Enables CrateDB clusters to act as data sources for your Grafana deployment, pro
 3. Click `+ Add data source`.
 4. Select `CrateDB` from the 'Type' dropdown.
 
+#### Cross-origin Resource Sharing (CORS)
+
+CrateDB supports [cross-origin resource sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) and if Grafana is running on a different origin (e.g. another domain), it is required to configure CrateDB accordingly. For example by this is the minimum required configuration in your `crate.yml`:
+```
+http.cors.enabled: true
+http.cors.allow-origin: "http://mydomain.com"
+```
+> Replace http://mydomain.com with the domain Grafana is running on, or use a "*" if it's OK to allow any domain to access CrateDB
+
+For further options look in [CrateDB's documentation](https://crate.io/docs/reference/en/latest/configuration.html#cross-origin-resource-sharing-cors)
+
 #### The CrateDB Data Source
 
 Name | Description

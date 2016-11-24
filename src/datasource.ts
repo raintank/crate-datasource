@@ -38,8 +38,6 @@ export class CrateDatasource {
     this.$q = $q;
     this.backendSrv = backendSrv;
     this.templateSrv = templateSrv;
-    // Custom value formatter
-    this.templateSrv.formatValue = formatCrateValue;
 
     this.queryBuilder = new CrateQueryBuilder(this.schema,
                                               this.table,
@@ -70,7 +68,7 @@ export class CrateDatasource {
           } else {
             // Use SELECT count(*) query for calculating required time interval
             // This is needed because Crate limit response to 10 000 rows.
-            getInterval = this._count_series_query(target, timeFrom, timeTo)
+            getInterval = this._count_series_query(target, timeFrom, timeTo, options)
               .then(count => {
                 let min_interval = (timeTo - timeFrom ) / (this.CRATE_ROWS_LIMIT / count);
                 return getMinCrateInterval(min_interval);
@@ -81,7 +79,7 @@ export class CrateDatasource {
           });
         }
         return getQuery.then(query => {
-          query = this.templateSrv.replace(query);
+          query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
           return this._sql_query(query, [timeFrom, timeTo])
             .then(result => {
               return handleResponse(target, result);
@@ -98,9 +96,9 @@ export class CrateDatasource {
 
   // Workaround for limit datapoints requested from Crate
   // Count points returned by time series query
-  _count_series_query(target, timeFrom, timeTo) {
+  _count_series_query(target, timeFrom, timeTo, options) {
     let query = this.queryBuilder.buildCountPointsQuery(target);
-    query = this.templateSrv.replace(query);
+    query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
     return this._sql_query(query, [timeFrom, timeTo])
       .then(result => {
         return result.rowcount;
@@ -142,12 +140,12 @@ export class CrateDatasource {
       return this.$q.when([]);
     }
 
-    query = this.templateSrv.replace(query);
+    query = this.templateSrv.replace(query, null, formatCrateValue);
     return this._sql_query(query).then(result => {
       return _.map(_.flatten(result.rows), row => {
         return {
           text: row,
-          value: "'" + row + "'"
+          value: row
         };
       });
     });
@@ -205,14 +203,21 @@ export class CrateDatasource {
 }
 
 // Special value formatter for Crate.
-// Render multi-value variables for using in SQL "IN" expression:
-// $host => ('backend01', 'backend02')
-// WHERE host IN $host => WHERE host IN ('backend01', 'backend02')
-function formatCrateValue(value, format, variable) {
+function formatCrateValue(value) {
   if (typeof value === 'string') {
-    return value;
+    return wrapWithQuotes(value);
+  } else {
+    return value.map(v => wrapWithQuotes(v)).join(', ');
   }
-  return '(' + value.join(', ') + ')';
+}
+
+function wrapWithQuotes(value) {
+  if (!isNaN(value) ||
+      value.indexOf("'") != -1) {
+    return value;
+  } else {
+    return "'" + value + "'";
+  }
 }
 
 export function convertToCrateInterval(grafanaInterval) {

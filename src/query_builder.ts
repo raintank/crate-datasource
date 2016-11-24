@@ -183,24 +183,27 @@ export class CrateQueryBuilder {
 
       // Quote arguments as required by the operator and value type
       let rendered_value: string;
+      let value = clauseObj.value;
       if (clauseObj.operator.toLowerCase() === 'in') {
         // Handle IN operator. Split comma-separated values.
         // "42, 10, a" => 42, 10, 'a'
-        let value = clauseObj.value;
         rendered_value = '(' + _.map(value.split(','), v => {
           v = v.trim();
-          console.log('containsVariable()',v , this.containsVariable(v));
           if (!isNaN(v) || this.containsVariable(v)) {
             return v;
           } else {
             return "'" + v + "'";
           }
         }).join(', ') + ')';
-      } else if (!isNaN(clauseObj.value) ||
-          this.containsVariable(clauseObj.value)) {
-        rendered_value = clauseObj.value;
       } else {
-        rendered_value = "'" + clauseObj.value + "'";
+        rendered_value = _.map(value.split(','), v => {
+          v = v.trim();
+          if (!isNaN(v) || this.containsVariable(v)) {
+            return v;
+          } else {
+            return "'" + v + "'";
+          }
+        }).join(', ');
       }
       rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + rendered_value;
       return rendered;

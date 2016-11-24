@@ -184,13 +184,12 @@ System.register(['lodash'], function(exports_1) {
                         }
                         // Quote arguments as required by the operator and value type
                         var rendered_value;
+                        var value = clauseObj.value;
                         if (clauseObj.operator.toLowerCase() === 'in') {
                             // Handle IN operator. Split comma-separated values.
                             // "42, 10, a" => 42, 10, 'a'
-                            var value = clauseObj.value;
                             rendered_value = '(' + lodash_1["default"].map(value.split(','), function (v) {
                                 v = v.trim();
-                                console.log('containsVariable()', v, _this.containsVariable(v));
                                 if (!isNaN(v) || _this.containsVariable(v)) {
                                     return v;
                                 }
@@ -199,12 +198,16 @@ System.register(['lodash'], function(exports_1) {
                                 }
                             }).join(', ') + ')';
                         }
-                        else if (!isNaN(clauseObj.value) ||
-                            _this.containsVariable(clauseObj.value)) {
-                            rendered_value = clauseObj.value;
-                        }
                         else {
-                            rendered_value = "'" + clauseObj.value + "'";
+                            rendered_value = lodash_1["default"].map(value.split(','), function (v) {
+                                v = v.trim();
+                                if (!isNaN(v) || _this.containsVariable(v)) {
+                                    return v;
+                                }
+                                else {
+                                    return "'" + v + "'";
+                                }
+                            }).join(', ');
                         }
                         rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + rendered_value;
                         return rendered;

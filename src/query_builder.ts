@@ -200,7 +200,7 @@ export class CrateQueryBuilder {
     let variables = _.map(this.templateSrv.variables, 'name');
     let self = this;
     return _.some(variables, variable => {
-      return self.templateSrv.containsVariable(str, variable);
+      return str === variable;
     });
   }
 }

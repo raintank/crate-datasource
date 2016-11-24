@@ -181,9 +181,18 @@ export class CrateQueryBuilder {
         rendered += clauseObj.condition + " ";
       }
 
-      // Put non-numeric values into quotes.
+      // Quote arguments as required by the operator and value type
       let value: string;
-      if (_.isNumber(clauseObj.value) ||
+      if (clauseObj.operator.toLowerCase() === 'in') {
+        value = '(' + _.map(clauseObj.value.split(','), v => {
+          v = v.trim();
+          if (!isNaN(v) || this.containsVariable(v)) {
+            return v;
+          } else {
+            return "'" + v + "'";
+          }
+        }).join(', ') + ')';
+      } else if (_.isNumber(clauseObj.value) ||
           this.containsVariable(clauseObj.value)) {
         value = clauseObj.value;
       } else {

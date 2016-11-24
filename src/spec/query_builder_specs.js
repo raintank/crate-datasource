@@ -57,6 +57,22 @@ describe('CrateQueryBuilder', function() {
       done();
     });
 
+    it('should handle WHERE ... IN ... properly', function(done) {
+      ctx.target.whereClauses = [
+        {condition: 'AND', column: 'id', operator: 'IN', value: 'a, 42'}
+      ];
+      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+                           "avg(load) " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE ts >= ? AND ts <= ? " +
+                             "AND id IN ('a', 42) " +
+                           "GROUP BY time " +
+                           "ORDER BY time ASC";
+      var query = ctx.queryBuilder.build(ctx.target);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
     it('should add GROUP BY columns to SELECT and ORDER BY expressions', function(done) {
       ctx.target = {
         metricAggs: [

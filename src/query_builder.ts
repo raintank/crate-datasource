@@ -18,6 +18,7 @@ export class CrateQueryBuilder {
     this.defaultTimeColumn = defaultTimeColumn;
     this.defaultGroupInterval = defaultGroupInterval;
     this.templateSrv = templateSrv;
+    this.templateSrv.formatValue = formatCrateValue;
   }
 
   /**
@@ -184,15 +185,18 @@ export class CrateQueryBuilder {
       // Quote arguments as required by the operator and value type
       let value: string;
       if (clauseObj.operator.toLowerCase() === 'in') {
-        value = '(' + _.map(clauseObj.value.split(','), v => {
+        // Handle IN operator. Split comma-separated values.
+        // "42, 10, a" => 42, 10, 'a'
+        value = this.templateSrv.replace(clauseObj.value);
+        value = '(' + _.map(value.split(','), v => {
           v = v.trim();
-          if (!isNaN(v) || this.containsVariable(v)) {
+          if (!isNaN(v)) {
             return v;
           } else {
             return "'" + v + "'";
           }
         }).join(', ') + ')';
-      } else if (_.isNumber(clauseObj.value) ||
+      } else if (!isNaN(clauseObj.value) ||
           this.containsVariable(clauseObj.value)) {
         value = clauseObj.value;
       } else {
@@ -228,4 +232,15 @@ export function getTables(schema) {
                "WHERE schema_name='" + schema + "' " +
                "ORDER BY 1";
   return query;
+}
+
+// Special value formatter for Crate.
+// Render multi-value variables for using in SQL "IN" expression:
+// $host => ('backend01', 'backend02')
+// WHERE host IN $host => WHERE host IN ('backend01', 'backend02')
+function formatCrateValue(value, format, variable) {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return value.join(',');
 }

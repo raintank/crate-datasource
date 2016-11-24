@@ -181,15 +181,28 @@ export class CrateQueryBuilder {
         rendered += clauseObj.condition + " ";
       }
 
-      // Put non-numeric values into quotes.
-      let value: string;
-      if (_.isNumber(clauseObj.value) ||
+      // Quote arguments as required by the operator and value type
+      let rendered_value: string;
+      if (clauseObj.operator.toLowerCase() === 'in') {
+        // Handle IN operator. Split comma-separated values.
+        // "42, 10, a" => 42, 10, 'a'
+        let value = clauseObj.value;
+        rendered_value = '(' + _.map(value.split(','), v => {
+          v = v.trim();
+          console.log('containsVariable()',v , this.containsVariable(v));
+          if (!isNaN(v) || this.containsVariable(v)) {
+            return v;
+          } else {
+            return "'" + v + "'";
+          }
+        }).join(', ') + ')';
+      } else if (!isNaN(clauseObj.value) ||
           this.containsVariable(clauseObj.value)) {
-        value = clauseObj.value;
+        rendered_value = clauseObj.value;
       } else {
-        value = "'" + clauseObj.value + "'";
+        rendered_value = "'" + clauseObj.value + "'";
       }
-      rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + value;
+      rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + rendered_value;
       return rendered;
     });
     return renderedClauses.join(' ');
@@ -198,9 +211,9 @@ export class CrateQueryBuilder {
   // Check for template variables
   private containsVariable(str: string): boolean {
     let variables = _.map(this.templateSrv.variables, 'name');
-    let self = this;
     return _.some(variables, variable => {
-      return self.templateSrv.containsVariable(str, variable);
+      let pattern = new RegExp('\\$' + variable);
+      return pattern.test(str);
     });
   }
 }

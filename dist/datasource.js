@@ -3,14 +3,22 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
     var lodash_1, dateMath, query_builder_1, response_handler_1;
     var CrateDatasource;
     // Special value formatter for Crate.
-    // Render multi-value variables for using in SQL "IN" expression:
-    // $host => ('backend01', 'backend02')
-    // WHERE host IN $host => WHERE host IN ('backend01', 'backend02')
-    function formatCrateValue(value, format, variable) {
+    function formatCrateValue(value) {
         if (typeof value === 'string') {
+            return wrapWithQuotes(value);
+        }
+        else {
+            return value.map(function (v) { return wrapWithQuotes(v); }).join(', ');
+        }
+    }
+    function wrapWithQuotes(value) {
+        if (!isNaN(value) ||
+            value.indexOf("'") != -1) {
             return value;
         }
-        return '(' + value.join(', ') + ')';
+        else {
+            return "'" + value + "'";
+        }
     }
     function convertToCrateInterval(grafanaInterval) {
         var crateIntervals = [
@@ -79,8 +87,6 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     this.$q = $q;
                     this.backendSrv = backendSrv;
                     this.templateSrv = templateSrv;
-                    // Custom value formatter
-                    this.templateSrv.formatValue = formatCrateValue;
                     this.queryBuilder = new query_builder_1.CrateQueryBuilder(this.schema, this.table, this.defaultTimeColumn, this.defaultGroupInterval, this.templateSrv);
                     this.CRATE_ROWS_LIMIT = 10000;
                 }
@@ -106,7 +112,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                 else {
                                     // Use SELECT count(*) query for calculating required time interval
                                     // This is needed because Crate limit response to 10 000 rows.
-                                    getInterval = _this._count_series_query(target, timeFrom, timeTo)
+                                    getInterval = _this._count_series_query(target, timeFrom, timeTo, options)
                                         .then(function (count) {
                                         var min_interval = (timeTo - timeFrom) / (_this.CRATE_ROWS_LIMIT / count);
                                         return getMinCrateInterval(min_interval);
@@ -117,7 +123,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                 });
                             }
                             return getQuery.then(function (query) {
-                                query = _this.templateSrv.replace(query);
+                                query = _this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
                                 return _this._sql_query(query, [timeFrom, timeTo])
                                     .then(function (result) {
                                     return response_handler_1["default"](target, result);
@@ -133,9 +139,9 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                 };
                 // Workaround for limit datapoints requested from Crate
                 // Count points returned by time series query
-                CrateDatasource.prototype._count_series_query = function (target, timeFrom, timeTo) {
+                CrateDatasource.prototype._count_series_query = function (target, timeFrom, timeTo, options) {
                     var query = this.queryBuilder.buildCountPointsQuery(target);
-                    query = this.templateSrv.replace(query);
+                    query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
                     return this._sql_query(query, [timeFrom, timeTo])
                         .then(function (result) {
                         return result.rowcount;
@@ -175,12 +181,12 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     if (!query) {
                         return this.$q.when([]);
                     }
-                    query = this.templateSrv.replace(query);
+                    query = this.templateSrv.replace(query, null, formatCrateValue);
                     return this._sql_query(query).then(function (result) {
                         return lodash_1["default"].map(lodash_1["default"].flatten(result.rows), function (row) {
                             return {
                                 text: row,
-                                value: "'" + row + "'"
+                                value: row
                             };
                         });
                     });

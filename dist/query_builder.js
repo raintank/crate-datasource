@@ -182,16 +182,31 @@ System.register(['lodash'], function(exports_1) {
                         if (index !== 0) {
                             rendered += clauseObj.condition + " ";
                         }
-                        // Put non-numeric values into quotes.
-                        var value;
-                        if (lodash_1["default"].isNumber(clauseObj.value) ||
+                        // Quote arguments as required by the operator and value type
+                        var rendered_value;
+                        if (clauseObj.operator.toLowerCase() === 'in') {
+                            // Handle IN operator. Split comma-separated values.
+                            // "42, 10, a" => 42, 10, 'a'
+                            var value = clauseObj.value;
+                            rendered_value = '(' + lodash_1["default"].map(value.split(','), function (v) {
+                                v = v.trim();
+                                console.log('containsVariable()', v, _this.containsVariable(v));
+                                if (!isNaN(v) || _this.containsVariable(v)) {
+                                    return v;
+                                }
+                                else {
+                                    return "'" + v + "'";
+                                }
+                            }).join(', ') + ')';
+                        }
+                        else if (!isNaN(clauseObj.value) ||
                             _this.containsVariable(clauseObj.value)) {
-                            value = clauseObj.value;
+                            rendered_value = clauseObj.value;
                         }
                         else {
-                            value = "'" + clauseObj.value + "'";
+                            rendered_value = "'" + clauseObj.value + "'";
                         }
-                        rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + value;
+                        rendered += clauseObj.column + ' ' + clauseObj.operator + ' ' + rendered_value;
                         return rendered;
                     });
                     return renderedClauses.join(' ');
@@ -199,9 +214,9 @@ System.register(['lodash'], function(exports_1) {
                 // Check for template variables
                 CrateQueryBuilder.prototype.containsVariable = function (str) {
                     var variables = lodash_1["default"].map(this.templateSrv.variables, 'name');
-                    var self = this;
                     return lodash_1["default"].some(variables, function (variable) {
-                        return self.templateSrv.containsVariable(str, variable);
+                        var pattern = new RegExp('\\$' + variable);
+                        return pattern.test(str);
                     });
                 };
                 return CrateQueryBuilder;

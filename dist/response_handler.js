@@ -71,7 +71,7 @@ System.register(['lodash'], function(exports_1) {
                 ];
             });
             return [{
-                    target: target.table,
+                    target: columns[valueColumnIndex],
                     datapoints: datapoints
                 }];
         }

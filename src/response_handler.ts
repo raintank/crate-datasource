@@ -78,7 +78,7 @@ function handleBuildedResponse(target, result) {
     });
 
     return [{
-      target: target.table,
+      target: columns[valueColumnIndex],
       datapoints: datapoints
     }];
   }

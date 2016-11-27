@@ -37,7 +37,12 @@ System.register(['lodash'], function(exports_1) {
         }
         if (target.metricAggs.length) {
             selectColumnIndexes = lodash_1["default"].map(target.metricAggs, function (metricAgg) {
-                return lodash_1["default"].indexOf(columns, makeColName(metricAgg.type, metricAgg.column));
+                if (metricAgg.alias) {
+                    return lodash_1["default"].indexOf(columns, metricAgg.alias);
+                }
+                else {
+                    return lodash_1["default"].indexOf(columns, makeColName(metricAgg.type, metricAgg.column));
+                }
             });
         }
         if (groupByColumnIndexes && groupByColumnIndexes.length && !lodash_1["default"].some(groupByColumnIndexes, -1)) {

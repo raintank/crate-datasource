@@ -158,15 +158,22 @@ export class CrateQueryBuilder {
     let enabledAggs = _.filter(metricAggs, (agg) => {
       return !agg.hide;
     });
+
     let renderedAggs = _.map(enabledAggs, (agg) => {
+      let alias = '';
+      if (agg.alias) {
+        alias = ' AS \"' + agg.alias + '\"';
+      }
+
       if (agg.type === 'count_distinct') {
-        return "count(distinct " + agg.column + ")";
+        return "count(distinct " + agg.column + ")" + alias;
       } else if (agg.type === 'raw') {
-        return agg.column;
+        return agg.column + alias;
       } else {
-        return agg.type + "(" + agg.column + ")";
+        return agg.type + "(" + agg.column + ")" + alias;
       }
     });
+
     if (renderedAggs.length) {
       return renderedAggs.join(', ');
     } else {

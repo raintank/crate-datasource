@@ -68,6 +68,15 @@
         </metric-segment-model>
       </div>
 
+      <div class="gf-form">
+        <label class="gf-form-label query-keyword width-3">AS</label>
+        <input type="text"
+          class="gf-form-input max-width-12"
+          ng-model="agg.alias"
+          ng-blur="ctrl.onChangeInternal()">
+        </input>
+      </div>
+
       <div class="gf-form gf-form--grow">
         <label class="gf-form-label gf-form-label--grow">
           <a ng-click="toggleOptions()" ng-if="settingsLinkText">

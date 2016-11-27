@@ -42,7 +42,11 @@ function handleBuildedResponse(target, result) {
 
   if (target.metricAggs.length) {
     selectColumnIndexes = _.map(target.metricAggs, metricAgg => {
-      return _.indexOf(columns, makeColName(metricAgg.type, metricAgg.column));
+      if (metricAgg.alias) {
+        return _.indexOf(columns, metricAgg.alias);
+      } else {
+        return _.indexOf(columns, makeColName(metricAgg.type, metricAgg.column));
+      }
     });
   }
 

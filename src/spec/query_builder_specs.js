@@ -73,6 +73,25 @@ describe('CrateQueryBuilder', function() {
       done();
     });
 
+    it('should handle WHERE IN properly if template variables has been used', function(done) {
+      ctx.templateSrv.variables = [{name: 'id'}];
+
+      ctx.target.whereClauses = [
+        {condition: 'AND', column: 'id', operator: 'IN', value: '$id'}
+      ];
+
+      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+                           "avg(load) " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE ts >= ? AND ts <= ? " +
+                             "AND id IN ($id) " +
+                           "GROUP BY time " +
+                           "ORDER BY time ASC";
+      var query = ctx.queryBuilder.build(ctx.target);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
     it('should add GROUP BY columns to SELECT and ORDER BY expressions', function(done) {
       ctx.target = {
         metricAggs: [
@@ -81,12 +100,33 @@ describe('CrateQueryBuilder', function() {
         whereClauses: [],
         groupByColumns: ['hostname'],
       };
+
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load), hostname " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE ts >= ? AND ts <= ? " +
                            "GROUP BY time, hostname " +
                            "ORDER BY time, hostname ASC";
+
+      var query = ctx.queryBuilder.build(ctx.target);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
+    it('should add AS clause to SELECT if alias has been specified', function(done) {
+      ctx.target = {
+        metricAggs: [
+          {type: 'avg', column: 'load[\'1\']', alias: 'load'}
+        ],
+        whereClauses: [],
+        groupByColumns: [],
+      };
+      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+                           "avg(load[\'1\']) AS \"load\" " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE ts >= ? AND ts <= ? " +
+                           "GROUP BY time " +
+                           "ORDER BY time ASC";
       var query = ctx.queryBuilder.build(ctx.target);
       expect(query).to.equal(expected_query);
       done();

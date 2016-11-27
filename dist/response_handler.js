@@ -2,6 +2,30 @@
 System.register(['lodash'], function(exports_1) {
     var lodash_1;
     function handleResponse(target, result) {
+        if (target.rawQuery) {
+            return handleRawResponse(target, result);
+        }
+        else {
+            return handleBuildedResponse(target, result);
+        }
+    }
+    exports_1("default", handleResponse);
+    function handleRawResponse(target, result) {
+        var columns = result.cols;
+        var timeColumnIndex = 0;
+        var valueColumnIndex = 1;
+        var datapoints = lodash_1["default"].map(result.rows, function (row) {
+            return [
+                Number(row[valueColumnIndex]),
+                Number(row[timeColumnIndex]) // timestamp
+            ];
+        });
+        return [{
+                target: columns[valueColumnIndex],
+                datapoints: datapoints
+            }];
+    }
+    function handleBuildedResponse(target, result) {
         var columns = result.cols;
         var timeColumnIndex = 0;
         var valueColumnIndex = 1;
@@ -52,7 +76,6 @@ System.register(['lodash'], function(exports_1) {
                 }];
         }
     }
-    exports_1("default", handleResponse);
     function makeColName(type, column) {
         return type + '(' + column + ')';
     }

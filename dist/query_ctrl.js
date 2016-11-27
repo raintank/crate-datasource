@@ -72,7 +72,12 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                     });
                 };
                 CrateDatasourceQueryCtrl.prototype.getCollapsedText = function () {
-                    return this.crateQueryBuilder.build(this.target);
+                    if (this.target.rawQuery) {
+                        return this.target.query;
+                    }
+                    else {
+                        return this.crateQueryBuilder.build(this.target);
+                    }
                 };
                 ////////////////////
                 // Event handlers //

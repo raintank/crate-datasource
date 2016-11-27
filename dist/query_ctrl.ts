@@ -73,7 +73,11 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   }
 
   getCollapsedText(): string {
-    return this.crateQueryBuilder.build(this.target);
+    if (this.target.rawQuery) {
+      return this.target.query;
+    } else {
+      return this.crateQueryBuilder.build(this.target);
+    }
   }
 
   ////////////////////

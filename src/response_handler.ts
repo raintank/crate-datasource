@@ -3,6 +3,32 @@
 import _ from 'lodash';
 
 export default function handleResponse(target, result) {
+  if (target.rawQuery) {
+    return handleRawResponse(target, result);
+  } else {
+    return handleBuildedResponse(target, result);
+  }
+}
+
+function handleRawResponse(target, result) {
+  let columns = result.cols;
+  let timeColumnIndex = 0;
+  let valueColumnIndex = 1;
+
+  let datapoints = _.map(result.rows, row => {
+    return [
+      Number(row[valueColumnIndex]), // value
+      Number(row[timeColumnIndex])  // timestamp
+    ];
+  });
+
+  return [{
+    target: columns[valueColumnIndex],
+    datapoints: datapoints
+  }];
+}
+
+function handleBuildedResponse(target, result) {
   let columns = result.cols;
   let timeColumnIndex = 0;
   let valueColumnIndex = 1;

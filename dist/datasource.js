@@ -153,7 +153,8 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                  * error details.
                  */
                 CrateDatasource.prototype.testDatasource = function () {
-                    return this._get().then(function (response) {
+                    return this._get()
+                        .then(function (response) {
                         if (response.$$status === 200) {
                             return {
                                 status: "success",
@@ -162,13 +163,17 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                 title: "Success"
                             };
                         }
-                    }, function (error) {
-                        var message = error.statusText + ': ';
+                    })
+                        .catch(function (error) {
+                        var message = error.statusText ? error.statusText + ': ' : '';
                         if (error.data && error.data.error) {
                             message += error.data.error;
                         }
-                        else {
+                        else if (error.data) {
                             message += error.data;
+                        }
+                        else {
+                            message = "Can't connect to Crate instance";
                         }
                         return {
                             status: "error",
@@ -220,22 +225,19 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     if (this.basicAuth) {
                         options.headers["Authorization"] = this.basicAuth;
                     }
-                    return this.backendSrv.datasourceRequest(options);
+                    return this.backendSrv.datasourceRequest(options)
+                        .then(function (response) {
+                        response.data.$$status = response.status;
+                        response.data.$$config = response.config;
+                        return response.data;
+                    });
                 };
                 CrateDatasource.prototype._get = function (url) {
                     if (url === void 0) { url = ""; }
-                    return this._request('GET', url).then(function (response) {
-                        response.data.$$status = response.status;
-                        response.data.$$config = response.config;
-                        return response.data;
-                    });
+                    return this._request('GET', url);
                 };
                 CrateDatasource.prototype._post = function (url, data) {
-                    return this._request('POST', url, data).then(function (response) {
-                        response.data.$$status = response.status;
-                        response.data.$$config = response.config;
-                        return response.data;
-                    });
+                    return this._request('POST', url, data);
                 };
                 return CrateDatasource;
             })();

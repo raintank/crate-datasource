@@ -111,7 +111,8 @@ export class CrateDatasource {
    * error details.
    */
   testDatasource() {
-    return this._get().then(response => {
+    return this._get()
+    .then(response => {
       if (response.$$status === 200) {
         return {
           status: "success",
@@ -120,12 +121,15 @@ export class CrateDatasource {
           title: "Success"
         };
       }
-    }, error => {
-      let message = error.statusText + ': ';
+    })
+    .catch(error => {
+      let message = error.statusText ? error.statusText + ': ' : '';
       if (error.data && error.data.error) {
         message += error.data.error;
-      } else {
+      } else if (error.data) {
         message += error.data;
+      } else {
+        message = "Can't connect to Crate instance";
       }
       return {
         status: "error",
@@ -182,23 +186,20 @@ export class CrateDatasource {
       options.headers["Authorization"] = this.basicAuth;
     }
 
-    return this.backendSrv.datasourceRequest(options);
+    return this.backendSrv.datasourceRequest(options)
+    .then(response => {
+      response.data.$$status = response.status;
+      response.data.$$config = response.config;
+      return response.data;
+    });
   }
 
   _get(url = "") {
-    return this._request('GET', url).then(response => {
-      response.data.$$status = response.status;
-      response.data.$$config = response.config;
-      return response.data;
-    });
+    return this._request('GET', url);
   }
 
   _post(url: string, data?: any) {
-    return this._request('POST', url, data).then(response => {
-      response.data.$$status = response.status;
-      response.data.$$config = response.config;
-      return response.data;
-    });
+    return this._request('POST', url, data);
   }
 }
 

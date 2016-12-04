@@ -35,7 +35,6 @@ export class CrateQueryBuilder {
     // SELECT
     let query: string;
     if (rawAggs.length) {
-      console.log('RAW');
       query = "SELECT " + this.defaultTimeColumn + " as time, " +
         this.renderMetricAggs(target.metricAggs);
     } else {
@@ -165,12 +164,13 @@ export class CrateQueryBuilder {
         alias = ' AS \"' + agg.alias + '\"';
       }
 
+      let column = quoteColumn(agg.column);
       if (agg.type === 'count_distinct') {
-        return "count(distinct " + agg.column + ")" + alias;
+        return "count(distinct " + column + ")" + alias;
       } else if (agg.type === 'raw') {
-        return agg.column + alias;
+        return column + alias;
       } else {
-        return agg.type + "(" + agg.column + ")" + alias;
+        return agg.type + "(" + column + ")" + alias;
       }
     });
 
@@ -242,4 +242,16 @@ export function getTables(schema) {
                "WHERE schema_name='" + schema + "' " +
                "ORDER BY 1";
   return query;
+}
+
+function quoteColumn(column: string): string {
+  if (isWithUpperCase(column)) {
+    return '\"' + column + '\"';
+  } else {
+    return column;
+  }
+}
+
+function isWithUpperCase(str: string): boolean {
+  return str.toLowerCase() !== str;
 }

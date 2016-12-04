@@ -18,6 +18,17 @@ System.register(['lodash'], function(exports_1) {
         return query;
     }
     exports_1("getTables", getTables);
+    function quoteColumn(column) {
+        if (isWithUpperCase(column)) {
+            return '\"' + column + '\"';
+        }
+        else {
+            return column;
+        }
+    }
+    function isWithUpperCase(str) {
+        return str.toLowerCase() !== str;
+    }
     return {
         setters:[
             function (lodash_1_1) {
@@ -48,7 +59,6 @@ System.register(['lodash'], function(exports_1) {
                     // SELECT
                     var query;
                     if (rawAggs.length) {
-                        console.log('RAW');
                         query = "SELECT " + this.defaultTimeColumn + " as time, " +
                             this.renderMetricAggs(target.metricAggs);
                     }
@@ -162,14 +172,15 @@ System.register(['lodash'], function(exports_1) {
                         if (agg.alias) {
                             alias = ' AS \"' + agg.alias + '\"';
                         }
+                        var column = quoteColumn(agg.column);
                         if (agg.type === 'count_distinct') {
-                            return "count(distinct " + agg.column + ")" + alias;
+                            return "count(distinct " + column + ")" + alias;
                         }
                         else if (agg.type === 'raw') {
-                            return agg.column + alias;
+                            return column + alias;
                         }
                         else {
-                            return agg.type + "(" + agg.column + ")" + alias;
+                            return agg.type + "(" + column + ")" + alias;
                         }
                     });
                     if (renderedAggs.length) {

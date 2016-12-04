@@ -121,12 +121,35 @@ describe('CrateQueryBuilder', function() {
         whereClauses: [],
         groupByColumns: [],
       };
+
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load[\'1\']) AS \"load\" " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE ts >= ? AND ts <= ? " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
+
+      var query = ctx.queryBuilder.build(ctx.target);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
+    it('should quote column names with capital letters', function(done) {
+      ctx.target = {
+        metricAggs: [
+          {type: 'sum', column: 'intValue'}
+        ],
+        whereClauses: [],
+        groupByColumns: [],
+      };
+
+      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+                           "sum(\"intValue\") " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE ts >= ? AND ts <= ? " +
+                           "GROUP BY time " +
+                           "ORDER BY time ASC";
+
       var query = ctx.queryBuilder.build(ctx.target);
       expect(query).to.equal(expected_query);
       done();

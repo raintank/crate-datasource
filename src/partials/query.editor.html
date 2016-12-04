@@ -113,6 +113,14 @@
           on-change="ctrl.groupBySegmentChanged(segment, $index)">
         </metric-segment>
       </div>
+      <div class="gf-form">
+        <label class="gf-form-label query-keyword width-3">AS</label>
+        <input type="text" ng-repeat="groupByAlias in ctrl.target.groupByColumns"
+          class="gf-form-input max-width-12"
+          ng-model="ctrl.target.groupByAliases[$index]"
+          ng-blur="ctrl.onGroupByAliasChange($index)">
+        </input>
+      </div>
       <div class="gf-form gf-form--grow">
         <div class="gf-form-label gf-form-label--grow"></div>
       </div>

@@ -78,6 +78,7 @@ describe('Response Handler', function() {
     it('should group response by selected columns', function(done) {
       ctx.target =  {
         "groupByColumns": ["host"],
+        "groupByAliases": [],
         "metricAggs": [
           {"column": "value", "type": "avg"}
         ],
@@ -116,6 +117,7 @@ describe('Response Handler', function() {
     it('should transform to set of series for all group by columns', function(done) {
       ctx.target =  {
         "groupByColumns": ["host", "metric"],
+        "groupByAliases": [],
         "metricAggs": [
           {"column": "value", "type": "avg"}
         ],

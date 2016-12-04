@@ -49,8 +49,23 @@ System.register(['lodash'], function(exports_1) {
             var groupedResponse = lodash_1["default"].groupBy(result.rows, function (row) {
                 // Construct groupBy key from Group By columns, for example:
                 // [metric, host] => 'metric host'
-                return lodash_1["default"].map(groupByColumnIndexes, function (columnIndex) {
-                    return row[columnIndex];
+                return lodash_1["default"].map(groupByColumnIndexes, function (columnIndex, i) {
+                    if (target.groupByAliases[i]) {
+                        var pattern = new RegExp(target.groupByAliases[i]);
+                        var match = pattern.exec(row[columnIndex]);
+                        if (match && match.length > 1) {
+                            return match[1];
+                        }
+                        else if (match) {
+                            return match[0];
+                        }
+                        else {
+                            return row[columnIndex];
+                        }
+                    }
+                    else {
+                        return row[columnIndex];
+                    }
                 }).join(' ');
             });
             return lodash_1["default"].flatten(lodash_1["default"].map(groupedResponse, function (rows, key) {

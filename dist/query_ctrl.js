@@ -53,11 +53,13 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                             { type: 'avg', column: 'value' }
                         ],
                         groupByColumns: [],
+                        groupByAliases: [],
                         whereClauses: [],
                         timeInterval: ds.defaultGroupInterval,
                         aliasBy: "*"
                     };
                     lodash_1["default"].defaults(this.target, target_defaults);
+                    this.updateGroupByAliases();
                     this.groupBySegments = lodash_1["default"].map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
                     this.aliasBySegment = this.uiSegmentSrv.newSegment(this.target.aliasBy);
                     // Build WHERE segments
@@ -96,6 +98,14 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                     }), 'value');
                     this.groupBySegments = lodash_1["default"].map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
                     this.groupBySegments.push(this.uiSegmentSrv.newPlusButton());
+                    if (segment.value === this.removeWhereSegment.value) {
+                        this.target.groupByAliases.splice(index, 1);
+                    }
+                    this.updateGroupByAliases();
+                    this.onChangeInternal();
+                };
+                CrateDatasourceQueryCtrl.prototype.onGroupByAliasChange = function (index) {
+                    this.updateGroupByAliases();
                     this.onChangeInternal();
                 };
                 CrateDatasourceQueryCtrl.prototype.aliasBySegmentChanged = function () {
@@ -277,6 +287,19 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                         }
                     }
                     return segments;
+                };
+                CrateDatasourceQueryCtrl.prototype.updateGroupByAliases = function () {
+                    var _this = this;
+                    var groupByAliases = new Array(this.target.groupByColumns.length);
+                    this.target.groupByColumns.forEach(function (column, index) {
+                        if (_this.target.groupByAliases[index]) {
+                            groupByAliases[index] = _this.target.groupByAliases[index];
+                        }
+                        else {
+                            groupByAliases[index] = "";
+                        }
+                    });
+                    this.target.groupByAliases = groupByAliases;
                 };
                 CrateDatasourceQueryCtrl.templateUrl = 'partials/query.editor.html';
                 return CrateDatasourceQueryCtrl;

@@ -54,8 +54,20 @@ function handleBuildedResponse(target, result) {
     let groupedResponse = _.groupBy(result.rows, row => {
       // Construct groupBy key from Group By columns, for example:
       // [metric, host] => 'metric host'
-      return _.map(groupByColumnIndexes, columnIndex => {
-        return row[columnIndex];
+      return _.map(groupByColumnIndexes, (columnIndex, i) => {
+        if (target.groupByAliases[i]) {
+          let pattern = new RegExp(target.groupByAliases[i]);
+          let match = pattern.exec(row[columnIndex]);
+          if (match && match.length > 1) {
+            return match[1];
+          } else if (match){
+            return match[0];
+          } else {
+            return row[columnIndex];
+          }
+        } else {
+          return row[columnIndex];
+        }
       }).join(' ');
     });
 

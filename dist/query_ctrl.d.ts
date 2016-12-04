@@ -18,6 +18,7 @@ export declare class CrateDatasourceQueryCtrl extends QueryCtrl {
     getCollapsedText(): string;
     onChangeInternal(): void;
     groupBySegmentChanged(segment: any, index: any): void;
+    onGroupByAliasChange(index: any): void;
     aliasBySegmentChanged(): void;
     onAggTypeChange(): void;
     addMetricAgg(): void;
@@ -44,4 +45,5 @@ export declare class CrateDatasourceQueryCtrl extends QueryCtrl {
     buildWhereClauses(): void;
     fixSegments(segments: any): void;
     transformToSegments(results: any, addTemplateVars?: boolean): any;
+    updateGroupByAliases(): void;
 }

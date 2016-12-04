@@ -49,11 +49,14 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
         {type: 'avg', column: 'value'}
       ],
       groupByColumns: [],
+      groupByAliases: [],
       whereClauses: [],
       timeInterval: ds.defaultGroupInterval,
       aliasBy: "*"
     };
     _.defaults(this.target, target_defaults);
+
+    this.updateGroupByAliases();
 
     this.groupBySegments = _.map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
     this.aliasBySegment = this.uiSegmentSrv.newSegment(this.target.aliasBy);
@@ -98,6 +101,17 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     }), 'value');
     this.groupBySegments = _.map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
     this.groupBySegments.push(this.uiSegmentSrv.newPlusButton());
+
+    if (segment.value === this.removeWhereSegment.value) {
+      this.target.groupByAliases.splice(index, 1);
+    }
+    this.updateGroupByAliases();
+
+    this.onChangeInternal();
+  }
+
+  onGroupByAliasChange(index) {
+    this.updateGroupByAliases();
     this.onChangeInternal();
   }
 
@@ -292,6 +306,18 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       }
     }
     return segments;
+  }
+
+  updateGroupByAliases() {
+    let groupByAliases = new Array(this.target.groupByColumns.length);
+    this.target.groupByColumns.forEach((column, index) => {
+      if (this.target.groupByAliases[index]) {
+        groupByAliases[index] = this.target.groupByAliases[index];
+      } else {
+        groupByAliases[index] = "";
+      }
+    });
+    this.target.groupByAliases = groupByAliases;
   }
 
 }

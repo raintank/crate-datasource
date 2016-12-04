@@ -79,12 +79,11 @@ System.register(['lodash'], function(exports_1) {
                         query += " AND " + this.renderWhereClauses(target.whereClauses);
                     }
                     // GROUP BY
-                    query += " GROUP BY time";
-                    if (target.groupByColumns && target.groupByColumns.length) {
-                        query += ", " + target.groupByColumns.join(', ');
-                    }
-                    if (rawAggs.length) {
-                        query += ", " + lodash_1["default"].map(rawAggs, 'column').join(', ');
+                    if (!rawAggs.length) {
+                        query += " GROUP BY time";
+                        if (target.groupByColumns && target.groupByColumns.length) {
+                            query += ", " + target.groupByColumns.join(', ');
+                        }
                     }
                     // If GROUP BY specified, sort also by selected columns
                     query += " ORDER BY time";
@@ -121,12 +120,11 @@ System.register(['lodash'], function(exports_1) {
                         query += " AND " + this.renderWhereClauses(target.whereClauses);
                     }
                     // GROUP BY
-                    query += " GROUP BY ";
-                    if (target.groupByColumns && target.groupByColumns.length) {
-                        query += target.groupByColumns.join(', ');
-                    }
-                    if (rawAggs.length) {
-                        query += ", " + lodash_1["default"].map(rawAggs, 'column').join(', ');
+                    if (!rawAggs.length) {
+                        query += " GROUP BY ";
+                        if (target.groupByColumns && target.groupByColumns.length) {
+                            query += target.groupByColumns.join(', ');
+                        }
                     }
                     return query;
                 };

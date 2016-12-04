@@ -39,6 +39,26 @@ describe('CrateQueryBuilder', function() {
       done();
     });
 
+    it('should build proper SQL query when Raw (no aggs) agg used', function(done) {
+      ctx.target = {
+        metricAggs: [
+          {type: 'raw', column: 'load'}
+        ],
+        whereClauses: [],
+        groupByColumns: [],
+      };
+
+      var expected_query = "SELECT ts as time, " +
+                           "load " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE ts >= ? AND ts <= ? " +
+                           "ORDER BY time ASC";
+
+      var query = ctx.queryBuilder.build(ctx.target);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
     it('should build proper WHERE clause', function(done) {
       ctx.target.whereClauses = [
         {condition: 'AND', column: 'hostname', operator: '=', value: 'backend01'},

@@ -57,12 +57,11 @@ export class CrateQueryBuilder {
     }
 
     // GROUP BY
-    query += " GROUP BY time";
-    if (target.groupByColumns && target.groupByColumns.length) {
-      query += ", " + target.groupByColumns.join(', ');
-    }
-    if (rawAggs.length) {
-      query += ", " + _.map(rawAggs, 'column').join(', ');
+    if (!rawAggs.length) {
+      query += " GROUP BY time";
+      if (target.groupByColumns && target.groupByColumns.length) {
+        query += ", " + target.groupByColumns.join(', ');
+      }
     }
 
     // If GROUP BY specified, sort also by selected columns
@@ -105,12 +104,11 @@ export class CrateQueryBuilder {
     }
 
     // GROUP BY
-    query += " GROUP BY ";
-    if (target.groupByColumns && target.groupByColumns.length) {
-      query += target.groupByColumns.join(', ');
-    }
-    if (rawAggs.length) {
-      query += ", " + _.map(rawAggs, 'column').join(', ');
+    if (!rawAggs.length) {
+      query += " GROUP BY ";
+      if (target.groupByColumns && target.groupByColumns.length) {
+        query += target.groupByColumns.join(', ');
+      }
     }
 
     return query;

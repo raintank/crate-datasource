@@ -115,6 +115,10 @@ function handleBuildedResponse(target, result) {
   }
 }
 
-function makeColName(type, column) {
-  return type + '(' + column + ')';
+function makeColName(aggType, column) {
+  if (aggType === 'count_distinct') {
+    return 'count(DISTINCT ' + column + ')';
+  } else {
+    return aggType + '(' + column + ')';
+  }
 }

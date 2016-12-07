@@ -35,8 +35,11 @@ System.register(['lodash'], function(exports_1) {
                 return lodash_1["default"].indexOf(columns, groupByCol);
             });
         }
-        if (target.metricAggs.length) {
-            selectColumnIndexes = lodash_1["default"].map(target.metricAggs, function (metricAgg) {
+        var enabledAggs = lodash_1["default"].filter(target.metricAggs, function (agg) {
+            return !agg.hide;
+        });
+        if (enabledAggs.length) {
+            selectColumnIndexes = lodash_1["default"].map(enabledAggs, function (metricAgg) {
                 if (metricAgg.alias) {
                     return lodash_1["default"].indexOf(columns, metricAgg.alias);
                 }
@@ -49,23 +52,8 @@ System.register(['lodash'], function(exports_1) {
             var groupedResponse = lodash_1["default"].groupBy(result.rows, function (row) {
                 // Construct groupBy key from Group By columns, for example:
                 // [metric, host] => 'metric host'
-                return lodash_1["default"].map(groupByColumnIndexes, function (columnIndex, i) {
-                    if (target.groupByAliases[i]) {
-                        var pattern = new RegExp(target.groupByAliases[i]);
-                        var match = pattern.exec(row[columnIndex]);
-                        if (match && match.length > 1) {
-                            return match[1];
-                        }
-                        else if (match) {
-                            return match[0];
-                        }
-                        else {
-                            return row[columnIndex];
-                        }
-                    }
-                    else {
-                        return row[columnIndex];
-                    }
+                return lodash_1["default"].map(groupByColumnIndexes, function (columnIndex) {
+                    return row[columnIndex];
                 }).join(' ');
             });
             return lodash_1["default"].flatten(lodash_1["default"].map(groupedResponse, function (rows, key) {
@@ -76,8 +64,34 @@ System.register(['lodash'], function(exports_1) {
                             Number(row[timeColumnIndex]) // timestamp
                         ];
                     });
+                    // Build alias for Group By column values
+                    var group_by_alias;
+                    if (rows.length) {
+                        group_by_alias = lodash_1["default"].map(groupByColumnIndexes, function (columnIndex, i) {
+                            var first_row = rows[0];
+                            if (target.groupByAliases[i]) {
+                                var pattern = new RegExp(target.groupByAliases[i]);
+                                var match = pattern.exec(first_row[columnIndex]);
+                                if (match && match.length > 1) {
+                                    return match[1];
+                                }
+                                else if (match) {
+                                    return match[0];
+                                }
+                                else {
+                                    return first_row[columnIndex];
+                                }
+                            }
+                            else {
+                                return first_row[columnIndex];
+                            }
+                        }).join(' ');
+                    }
+                    else {
+                        group_by_alias = key;
+                    }
                     return {
-                        target: key + ': ' + columns[valueIndex],
+                        target: group_by_alias + ': ' + columns[valueIndex],
                         datapoints: datapoints
                     };
                 });

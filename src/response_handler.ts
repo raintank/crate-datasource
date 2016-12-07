@@ -40,8 +40,11 @@ function handleBuildedResponse(target, result) {
     });
   }
 
-  if (target.metricAggs.length) {
-    selectColumnIndexes = _.map(target.metricAggs, metricAgg => {
+  let enabledAggs = _.filter(target.metricAggs, (agg) => {
+    return !agg.hide;
+  });
+  if (enabledAggs.length) {
+    selectColumnIndexes = _.map(enabledAggs, metricAgg => {
       if (metricAgg.alias) {
         return _.indexOf(columns, metricAgg.alias);
       } else {
@@ -54,20 +57,8 @@ function handleBuildedResponse(target, result) {
     let groupedResponse = _.groupBy(result.rows, row => {
       // Construct groupBy key from Group By columns, for example:
       // [metric, host] => 'metric host'
-      return _.map(groupByColumnIndexes, (columnIndex, i) => {
-        if (target.groupByAliases[i]) {
-          let pattern = new RegExp(target.groupByAliases[i]);
-          let match = pattern.exec(row[columnIndex]);
-          if (match && match.length > 1) {
-            return match[1];
-          } else if (match){
-            return match[0];
-          } else {
-            return row[columnIndex];
-          }
-        } else {
-          return row[columnIndex];
-        }
+      return _.map(groupByColumnIndexes, columnIndex => {
+        return row[columnIndex];
       }).join(' ');
     });
 
@@ -79,8 +70,32 @@ function handleBuildedResponse(target, result) {
             Number(row[timeColumnIndex])  // timestamp
           ];
         });
+
+        // Build alias for Group By column values
+        let group_by_alias: string;
+        if (rows.length) {
+          group_by_alias = _.map(groupByColumnIndexes, (columnIndex, i) => {
+            let first_row = rows[0];
+            if (target.groupByAliases[i]) {
+              let pattern = new RegExp(target.groupByAliases[i]);
+              let match = pattern.exec(first_row[columnIndex]);
+              if (match && match.length > 1) {
+                return match[1];
+              } else if (match){
+                return match[0];
+              } else {
+                return first_row[columnIndex];
+              }
+            } else {
+              return first_row[columnIndex];
+            }
+          }).join(' ');
+        } else {
+          group_by_alias = key;
+        }
+
         return {
-          target: key + ': ' + columns[valueIndex],
+          target: group_by_alias + ': ' + columns[valueIndex],
           datapoints: datapoints
         };
       });

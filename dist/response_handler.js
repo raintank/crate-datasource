@@ -69,7 +69,7 @@ System.register(['lodash'], function(exports_1) {
                     if (rows.length) {
                         group_by_alias = lodash_1["default"].map(groupByColumnIndexes, function (columnIndex, i) {
                             var first_row = rows[0];
-                            if (target.groupByAliases[i]) {
+                            if (target.groupByAliases && target.groupByAliases[i]) {
                                 var pattern = new RegExp(target.groupByAliases[i]);
                                 var match = pattern.exec(first_row[columnIndex]);
                                 if (match && match.length > 1) {

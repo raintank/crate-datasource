@@ -76,7 +76,7 @@ function handleBuildedResponse(target, result) {
         if (rows.length) {
           group_by_alias = _.map(groupByColumnIndexes, (columnIndex, i) => {
             let first_row = rows[0];
-            if (target.groupByAliases[i]) {
+            if (target.groupByAliases && target.groupByAliases[i]) {
               let pattern = new RegExp(target.groupByAliases[i]);
               let match = pattern.exec(first_row[columnIndex]);
               if (match && match.length > 1) {

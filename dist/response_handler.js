@@ -14,16 +14,33 @@ System.register(['lodash'], function(exports_1) {
         var columns = result.cols;
         var timeColumnIndex = 0;
         var valueColumnIndex = 1;
-        var datapoints = lodash_1["default"].map(result.rows, function (row) {
+        if (columns.length > 2) {
+            var groupedResponse = lodash_1["default"].groupBy(result.rows, function (row) {
+                // Assume row structure is
+                // [ts, value, ...group by columns]
+                return row.slice(2).join(' ');
+            });
+            return lodash_1["default"].map(groupedResponse, function (rows, key) {
+                return {
+                    target: key + ': ' + columns[valueColumnIndex],
+                    datapoints: convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex)
+                };
+            });
+        }
+        else {
+            return [{
+                    target: columns[valueColumnIndex],
+                    datapoints: convertToGrafanaPoints(result.rows, timeColumnIndex, valueColumnIndex)
+                }];
+        }
+    }
+    function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
+        return lodash_1["default"].map(rows, function (row) {
             return [
                 Number(row[valueColumnIndex]),
                 Number(row[timeColumnIndex]) // timestamp
             ];
         });
-        return [{
-                target: columns[valueColumnIndex],
-                datapoints: datapoints
-            }];
     }
     function handleBuildedResponse(target, result) {
         var columns = result.cols;

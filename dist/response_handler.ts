@@ -15,17 +15,34 @@ function handleRawResponse(target, result) {
   let timeColumnIndex = 0;
   let valueColumnIndex = 1;
 
-  let datapoints = _.map(result.rows, row => {
+  if (columns.length > 2) {
+    let groupedResponse = _.groupBy(result.rows, row => {
+      // Assume row structure is
+      // [ts, value, ...group by columns]
+      return row.slice(2).join(' ');
+    });
+
+    return _.map(groupedResponse, (rows, key) => {
+      return {
+        target: key + ': ' + columns[valueColumnIndex],
+        datapoints: convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex)
+      };
+    });
+  } else {
+    return [{
+      target: columns[valueColumnIndex],
+      datapoints: convertToGrafanaPoints(result.rows, timeColumnIndex, valueColumnIndex)
+    }];
+  }
+}
+
+function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
+  return _.map(rows, row => {
     return [
       Number(row[valueColumnIndex]), // value
       Number(row[timeColumnIndex])  // timestamp
     ];
   });
-
-  return [{
-    target: columns[valueColumnIndex],
-    datapoints: datapoints
-  }];
 }
 
 function handleBuildedResponse(target, result) {

@@ -36,20 +36,10 @@ function handleRawResponse(target, result) {
   }
 }
 
-function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
-  return _.map(rows, row => {
-    return [
-      Number(row[valueColumnIndex]), // value
-      Number(row[timeColumnIndex])  // timestamp
-    ];
-  });
-}
-
 function handleBuildedResponse(target, result) {
   let columns = result.cols;
   let timeColumnIndex = 0;
-  let valueColumnIndex = 1;
-  let groupByColumnIndexes, selectColumnIndexes;
+  let groupByColumnIndexes: number[], selectColumnIndexes: number[];
 
   if (target.groupByColumns.length) {
     groupByColumnIndexes = _.map(target.groupByColumns, groupByCol => {
@@ -60,14 +50,13 @@ function handleBuildedResponse(target, result) {
   let enabledAggs = _.filter(target.metricAggs, (agg) => {
     return !agg.hide;
   });
+
   if (enabledAggs.length) {
-    selectColumnIndexes = _.map(enabledAggs, metricAgg => {
-      if (metricAgg.alias) {
-        return _.indexOf(columns, metricAgg.alias);
-      } else {
-        return _.indexOf(columns, makeColName(metricAgg.type, metricAgg.column));
-      }
+    selectColumnIndexes = _.map(enabledAggs, (metricAgg, index) => {
+      return index + 1;
     });
+  } else {
+    return [];
   }
 
   if (groupByColumnIndexes && groupByColumnIndexes.length && !_.some(groupByColumnIndexes, -1)) {
@@ -81,12 +70,7 @@ function handleBuildedResponse(target, result) {
 
     return _.flatten(_.map(groupedResponse, (rows, key) => {
       return _.map(selectColumnIndexes, (valueIndex) => {
-        let datapoints = _.map(rows, row => {
-          return [
-            Number(row[valueIndex]), // value
-            Number(row[timeColumnIndex])  // timestamp
-          ];
-        });
+        let datapoints = convertToGrafanaPoints(rows, timeColumnIndex, valueIndex);
 
         // Build alias for Group By column values
         let group_by_alias: string;
@@ -118,18 +102,24 @@ function handleBuildedResponse(target, result) {
       });
     }));
   } else {
-    let datapoints = _.map(result.rows, row => {
-      return [
-        Number(row[valueColumnIndex]), // value
-        Number(row[timeColumnIndex])  // timestamp
-      ];
-    });
+    return _.map(selectColumnIndexes, (valueIndex) => {
+      let datapoints = convertToGrafanaPoints(result.rows, timeColumnIndex, valueIndex);
 
-    return [{
-      target: columns[valueColumnIndex],
-      datapoints: datapoints
-    }];
+      return {
+        target: columns[valueIndex],
+        datapoints: datapoints
+      };
+    });
   }
+}
+
+function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
+  return _.map(rows, row => {
+    return [
+      Number(row[valueColumnIndex]), // value
+      Number(row[timeColumnIndex])  // timestamp
+    ];
+  });
 }
 
 function makeColName(aggType, column) {

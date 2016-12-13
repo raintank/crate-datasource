@@ -155,6 +155,55 @@ describe('Response Handler', function() {
       done();
     });
 
+    it('should handle multiple select values', function(done) {
+      ctx.target =  {
+        "groupByColumns": [],
+        "metricAggs": [
+          {"column": "load1", "type": "avg"},
+          {"column": "load15", "type": "avg"}
+        ],
+        "whereClauses": []
+      };
+
+      ctx.crateResponse = {
+        "cols": ["time","avg(load1)","avg(load15)"],
+        "duration": 16,
+        "rowcount":5,
+        "rows":[
+          [1466640780000,1.2562332153320312,1.12],
+          [1466640840000,1.1889413595199585,1.01],
+          [1466640900000,1.3127131064732869,1.21],
+          [1466640960000,1.3972599903742473,1.28],
+          [1466641020000,1.27950386206309,1.16]
+        ]
+      };
+
+      var result = handleResponse(ctx.target, ctx.crateResponse);
+      expect(result).to.deep.equal([
+        {
+          target: 'avg(load1)',
+          datapoints: [
+            [1.2562332153320312,1466640780000],
+            [1.1889413595199585,1466640840000],
+            [1.3127131064732869,1466640900000],
+            [1.3972599903742473,1466640960000],
+            [1.27950386206309,1466641020000]
+          ]
+        },
+        {
+          target: 'avg(load15)',
+          datapoints: [
+            [1.12,1466640780000],
+            [1.01,1466640840000],
+            [1.21,1466640900000],
+            [1.28,1466640960000],
+            [1.16,1466641020000]
+          ]
+        }
+      ]);
+      done();
+    });
+
   });
 
   describe('When handling raw response', function() {

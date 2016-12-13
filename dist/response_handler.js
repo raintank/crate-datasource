@@ -34,18 +34,9 @@ System.register(['lodash'], function(exports_1) {
                 }];
         }
     }
-    function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
-        return lodash_1["default"].map(rows, function (row) {
-            return [
-                Number(row[valueColumnIndex]),
-                Number(row[timeColumnIndex]) // timestamp
-            ];
-        });
-    }
     function handleBuildedResponse(target, result) {
         var columns = result.cols;
         var timeColumnIndex = 0;
-        var valueColumnIndex = 1;
         var groupByColumnIndexes, selectColumnIndexes;
         if (target.groupByColumns.length) {
             groupByColumnIndexes = lodash_1["default"].map(target.groupByColumns, function (groupByCol) {
@@ -56,14 +47,12 @@ System.register(['lodash'], function(exports_1) {
             return !agg.hide;
         });
         if (enabledAggs.length) {
-            selectColumnIndexes = lodash_1["default"].map(enabledAggs, function (metricAgg) {
-                if (metricAgg.alias) {
-                    return lodash_1["default"].indexOf(columns, metricAgg.alias);
-                }
-                else {
-                    return lodash_1["default"].indexOf(columns, makeColName(metricAgg.type, metricAgg.column));
-                }
+            selectColumnIndexes = lodash_1["default"].map(enabledAggs, function (metricAgg, index) {
+                return index + 1;
             });
+        }
+        else {
+            return [];
         }
         if (groupByColumnIndexes && groupByColumnIndexes.length && !lodash_1["default"].some(groupByColumnIndexes, -1)) {
             var groupedResponse = lodash_1["default"].groupBy(result.rows, function (row) {
@@ -75,12 +64,7 @@ System.register(['lodash'], function(exports_1) {
             });
             return lodash_1["default"].flatten(lodash_1["default"].map(groupedResponse, function (rows, key) {
                 return lodash_1["default"].map(selectColumnIndexes, function (valueIndex) {
-                    var datapoints = lodash_1["default"].map(rows, function (row) {
-                        return [
-                            Number(row[valueIndex]),
-                            Number(row[timeColumnIndex]) // timestamp
-                        ];
-                    });
+                    var datapoints = convertToGrafanaPoints(rows, timeColumnIndex, valueIndex);
                     // Build alias for Group By column values
                     var group_by_alias;
                     if (rows.length) {
@@ -115,17 +99,22 @@ System.register(['lodash'], function(exports_1) {
             }));
         }
         else {
-            var datapoints = lodash_1["default"].map(result.rows, function (row) {
-                return [
-                    Number(row[valueColumnIndex]),
-                    Number(row[timeColumnIndex]) // timestamp
-                ];
-            });
-            return [{
-                    target: columns[valueColumnIndex],
+            return lodash_1["default"].map(selectColumnIndexes, function (valueIndex) {
+                var datapoints = convertToGrafanaPoints(result.rows, timeColumnIndex, valueIndex);
+                return {
+                    target: columns[valueIndex],
                     datapoints: datapoints
-                }];
+                };
+            });
         }
+    }
+    function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
+        return lodash_1["default"].map(rows, function (row) {
+            return [
+                Number(row[valueColumnIndex]),
+                Number(row[timeColumnIndex]) // timestamp
+            ];
+        });
     }
     function makeColName(aggType, column) {
         if (aggType === 'count_distinct') {

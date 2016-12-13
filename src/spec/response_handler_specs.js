@@ -156,4 +156,66 @@ describe('Response Handler', function() {
     });
 
   });
+
+  describe('When handling raw response', function() {
+
+    beforeEach(function() {
+      ctx.target = {};
+      ctx.crateResponse = {};
+    });
+
+    it('should handle GROUP BY columns', function(done) {
+      ctx.target =  {
+        "rawQuery": true,
+        "query": "SELECT ts as time, load, hostname " +
+                    "FROM stats.nodes WHERE ts >= ? AND ts <= ? " +
+                    "GROUP BY time, load, hostname " +
+                    "ORDER BY time ASC"
+      };
+
+      ctx.crateResponse = {
+        "cols": ["time", "load", "hostname"],
+        "duration": 16,
+        "rowcount":5,
+        "rows":[
+          [1466640780000,1.2562332153320312, "host01"],
+          [1466640780000,1.2562332153320312, "host02"],
+          [1466640840000,1.1889413595199585, "host01"],
+          [1466640840000,1.1889413595199585, "host02"],
+          [1466640900000,1.3127131064732869, "host01"],
+          [1466640900000,1.3127131064732869, "host02"],
+          [1466640960000,1.3972599903742473, "host01"],
+          [1466640960000,1.3972599903742473, "host02"],
+          [1466641020000,1.27950386206309, "host01"],
+          [1466641020000,1.27950386206309, "host02"]
+        ]
+      };
+
+      var result = handleResponse(ctx.target, ctx.crateResponse);
+      expect(result).to.deep.equal([
+        {
+          target: 'host01: load',
+          datapoints: [
+            [1.2562332153320312,1466640780000],
+            [1.1889413595199585,1466640840000],
+            [1.3127131064732869,1466640900000],
+            [1.3972599903742473,1466640960000],
+            [1.27950386206309,1466641020000]
+          ]
+        },
+        {
+          target: 'host02: load',
+          datapoints: [
+            [1.2562332153320312,1466640780000],
+            [1.1889413595199585,1466640840000],
+            [1.3127131064732869,1466640900000],
+            [1.3972599903742473,1466640960000],
+            [1.27950386206309,1466641020000]
+          ]
+        }
+      ]);
+      done();
+    });
+  });
+
 });

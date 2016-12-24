@@ -3,11 +3,23 @@
 import _ from 'lodash';
 
 export default function handleResponse(target, result) {
+  if (target.resultFormat == 'table') {
+    return handleTableResponse(target, result);
+  } 
+
   if (target.rawQuery) {
     return handleRawResponse(target, result);
   } else {
     return handleBuildedResponse(target, result);
   }
+}
+
+function handleTableResponse(target, result) {
+  let retObj = {columns: [], rows: result.rows, type: 'table'};
+  result.cols.forEach((e) => {
+    retObj['columns'].push({text: e})
+  });
+  return retObj;
 }
 
 function handleRawResponse(target, result) {

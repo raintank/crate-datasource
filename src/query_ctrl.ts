@@ -16,6 +16,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   operators: any;
   timeIntervals: any[];
   aliasBySegment: any;
+  resultFormats: any[];
 
   constructor($scope, $injector, private $q, private uiSegmentSrv, private templateSrv)  {
     super($scope, $injector);
@@ -42,6 +43,11 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       {name: 'Month',   value: 'month'},
       {name: 'Quarter', value: 'quarter'},
       {name: 'Year',    value: 'year'}
+    ];
+
+    this.resultFormats = [
+      {text: 'Time series', value: 'time_series'},
+      {text: 'Table', value: 'table'},
     ];
 
     var target_defaults = {

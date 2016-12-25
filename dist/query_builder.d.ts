@@ -14,6 +14,7 @@ export declare class CrateQueryBuilder {
      */
     build(target: any, groupInterval?: string): string;
     buildCountPointsQuery(target: any): string;
+    renderAdhocFilters(filters: any): any;
     /**
      * Builds SQL query for getting available columns from table.
      * @return  {string}  SQL query.

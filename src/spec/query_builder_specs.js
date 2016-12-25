@@ -181,7 +181,7 @@ describe('CrateQueryBuilder', function() {
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT column_name " +
                            "FROM information_schema.columns " +
-                           "WHERE schema_name = 'stats' " +
+                           "WHERE table_schema = 'stats' " +
                              "AND table_name = 'nodes' " +
                            "ORDER BY 1";
       var query = ctx.queryBuilder.getColumnsQuery();
@@ -194,7 +194,8 @@ describe('CrateQueryBuilder', function() {
 
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT DISTINCT load " +
-                           "FROM \"stats\".\"nodes\"";
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE $timeFilter";
       var query = ctx.queryBuilder.getValuesQuery('load');
       expect(query).to.equal(expected_query);
       done();
@@ -202,7 +203,7 @@ describe('CrateQueryBuilder', function() {
 
     it('should add limit to query if it passed', function(done) {
       var expected_query = "SELECT DISTINCT load " +
-                           "FROM \"stats\".\"nodes\" LIMIT 10";
+                           "FROM \"stats\".\"nodes\" WHERE $timeFilter LIMIT 10";
       var query = ctx.queryBuilder.getValuesQuery('load', 10);
       expect(query).to.equal(expected_query);
       done();

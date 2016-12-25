@@ -23,7 +23,8 @@ export class CrateDatasource {
   constructor(instanceSettings,
               private $q,
               private backendSrv,
-              private templateSrv) {
+              private templateSrv,
+              private timeSrv) {
 
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
@@ -38,6 +39,7 @@ export class CrateDatasource {
     this.$q = $q;
     this.backendSrv = backendSrv;
     this.templateSrv = templateSrv;
+    this.timeSrv = timeSrv;
 
     this.queryBuilder = new CrateQueryBuilder(this.schema,
                                               this.table,
@@ -81,6 +83,10 @@ export class CrateDatasource {
           });
         }
         return getQuery.then(query => {
+          let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
+          if (adhocFilters.length > 0) {
+            timeFilter += " AND " + this.queryBuilder.renderAdhocFilters(adhocFilters);
+          }
           scopedVars.timeFilter = {value: timeFilter};
           query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
           return this._sql_query(query, [timeFrom, timeTo])
@@ -160,6 +166,26 @@ export class CrateDatasource {
 
   getTimeFilter(timeFrom, timeTo) {
     return this.defaultTimeColumn + " >= '" + timeFrom + "' and " + this.defaultTimeColumn + " <= '" + timeTo + "'";
+  }
+
+  getTagKeys(options) {
+    let query = this.queryBuilder.getColumnsQuery();
+    return this.metricFindQuery(query);
+  }
+
+  getTagValues(options) {
+    let range = this.timeSrv.timeRange();
+    let timeFrom = this.getCrateTime(range.from);
+    let timeTo = this.getCrateTime(range.to);
+    let timeFilter = this.getTimeFilter(timeFrom, timeTo);
+    let scopedVars = {timeFilter: {value: timeFilter}};
+    let query = this.queryBuilder.getValuesQuery(options.key, this.CRATE_ROWS_LIMIT);
+    query = this.templateSrv.replace(query, scopedVars);
+    return this.metricFindQuery(query);
+  }
+
+  getCrateTime(date) {
+    return date.valueOf();
   }
 
   /**

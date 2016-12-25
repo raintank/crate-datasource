@@ -15,11 +15,7 @@ export default function handleResponse(target, result) {
 }
 
 function handleTableResponse(target, result) {
-  let retObj = {columns: [], rows: result.rows, type: 'table'};
-  result.cols.forEach((e) => {
-    retObj['columns'].push({text: e})
-  });
-  return retObj;
+  return { columns: result.cols.map((e) => { return {text: e}; }), rows: result.rows, type: 'table' };
 }
 
 function handleRawResponse(target, result) {

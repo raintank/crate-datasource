@@ -4,6 +4,7 @@ export declare class CrateDatasource {
     private $q;
     private backendSrv;
     private templateSrv;
+    private timeSrv;
     type: string;
     url: string;
     name: string;
@@ -15,7 +16,7 @@ export declare class CrateDatasource {
     defaultGroupInterval: string;
     queryBuilder: CrateQueryBuilder;
     CRATE_ROWS_LIMIT: number;
-    constructor(instanceSettings: any, $q: any, backendSrv: any, templateSrv: any);
+    constructor(instanceSettings: any, $q: any, backendSrv: any, templateSrv: any, timeSrv: any);
     query(options: any): any;
     _count_series_query(target: any, timeFrom: any, timeTo: any, options: any): any;
     /**
@@ -25,6 +26,10 @@ export declare class CrateDatasource {
      */
     testDatasource(): any;
     metricFindQuery(query: string): any;
+    getTimeFilter(timeFrom: any, timeTo: any): string;
+    getTagKeys(options: any): any;
+    getTagValues(options: any): any;
+    getCrateTime(date: any): any;
     /**
      * Sends SQL query to Crate and returns result.
      * @param {string} query SQL query string

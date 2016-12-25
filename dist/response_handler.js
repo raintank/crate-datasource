@@ -2,6 +2,9 @@
 System.register(['lodash'], function(exports_1) {
     var lodash_1;
     function handleResponse(target, result) {
+        if (target.resultFormat == 'table') {
+            return handleTableResponse(target, result);
+        }
         if (target.rawQuery) {
             return handleRawResponse(target, result);
         }
@@ -10,6 +13,9 @@ System.register(['lodash'], function(exports_1) {
         }
     }
     exports_1("default", handleResponse);
+    function handleTableResponse(target, result) {
+        return { columns: result.cols.map(function (e) { return { text: e }; }), rows: result.rows, type: 'table' };
+    }
     function handleRawResponse(target, result) {
         var columns = result.cols;
         var timeColumnIndex = 0;

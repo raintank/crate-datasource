@@ -48,9 +48,8 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
     query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-             "WHERE " + this.defaultTimeColumn + " >= ? AND " +
-               this.defaultTimeColumn + " <= ?";
-
+             "WHERE $timeFilter";
+    
     // WHERE
     if (target.whereClauses && target.whereClauses.length) {
       query += " AND " + this.renderWhereClauses(target.whereClauses);

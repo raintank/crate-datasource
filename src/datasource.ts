@@ -53,6 +53,8 @@ export class CrateDatasource {
     let timeFrom = Math.ceil(dateMath.parse(options.range.from));
     let timeTo = Math.ceil(dateMath.parse(options.range.to));
     let getInterval = this.$q.when(convertToCrateInterval(options.interval));
+    let timeFilter = this.getTimeFilter(timeFrom, timeTo);
+    let scopedVars = options.scopedVars ? _.cloneDeep(options.scopedVars) : {};
 
     let queries = _.map(options.targets, target => {
       if (target.hide || (target.rawQuery && !target.query)) {
@@ -79,7 +81,8 @@ export class CrateDatasource {
           });
         }
         return getQuery.then(query => {
-          query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
+          scopedVars.timeFilter = {value: timeFilter};
+          query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
           return this._sql_query(query, [timeFrom, timeTo])
             .then(result => {
               return handleResponse(target, result);
@@ -153,6 +156,10 @@ export class CrateDatasource {
         };
       });
     });
+  }
+
+  getTimeFilter(timeFrom, timeTo) {
+    return this.defaultTimeColumn + " >= '" + timeFrom + "' and " + this.defaultTimeColumn + " <= '" + timeTo + "'";
   }
 
   /**

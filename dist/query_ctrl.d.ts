@@ -13,6 +13,7 @@ export declare class CrateDatasourceQueryCtrl extends QueryCtrl {
     operators: any;
     timeIntervals: any[];
     aliasBySegment: any;
+    resultFormats: any[];
     constructor($scope: any, $injector: any, $q: any, uiSegmentSrv: any, templateSrv: any);
     crateQuery(query: any): any;
     getCollapsedText(): string;

@@ -48,9 +48,8 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
     query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-             "WHERE " + this.defaultTimeColumn + " >= ? AND " +
-               this.defaultTimeColumn + " <= ?";
-
+             "WHERE $timeFilter";
+    
     // WHERE
     if (target.whereClauses && target.whereClauses.length) {
       query += " AND " + this.renderWhereClauses(target.whereClauses);
@@ -114,6 +113,24 @@ export class CrateQueryBuilder {
     return query;
   }
 
+  renderAdhocFilters(filters) {
+    let conditions = _.map(filters, (tag, index) => {
+      let str = "";
+      let operator = tag.operator;
+      let value = tag.value;
+      if (index > 0) {
+        str = (tag.condition || 'AND') + ' ';
+      }
+
+      if (operator === '=~') {
+        operator = '~';
+      }
+
+      return str + '"' + tag.key + '" ' + operator + ' \'' + value.replace(/'/g, "''") + '\'';
+    });
+    return conditions.join(' ');
+  }
+
   /**
    * Builds SQL query for getting available columns from table.
    * @return  {string}  SQL query.
@@ -121,7 +138,7 @@ export class CrateQueryBuilder {
   getColumnsQuery() {
     let query = "SELECT column_name " +
                  "FROM information_schema.columns " +
-                 "WHERE schema_name = '" + this.schema + "' " +
+                 "WHERE table_schema = '" + this.schema + "' " +
                    "AND table_name = '" + this.table + "' " +
                  "ORDER BY 1";
     return query;
@@ -130,7 +147,7 @@ export class CrateQueryBuilder {
   getNumericColumnsQuery() {
     return "SELECT column_name " +
            "FROM information_schema.columns " +
-           "WHERE schema_name = '" + this.schema + "' " +
+           "WHERE table_schema = '" + this.schema + "' " +
              "AND table_name = '" + this.table + "' " +
              "AND data_type in ('integer', 'long', 'short', 'double', 'float', 'byte') " +
            "ORDER BY 1";
@@ -143,7 +160,8 @@ export class CrateQueryBuilder {
    */
   getValuesQuery(column: string, limit?: number) {
     let query = "SELECT DISTINCT " + column + " " +
-                 "FROM \"" + this.schema + "\".\"" + this.table + "\"";
+                 "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
+                 "WHERE $timeFilter";
 
     if (limit) {
       query += " LIMIT " + limit;
@@ -227,9 +245,9 @@ export class CrateQueryBuilder {
 }
 
 export function getSchemas() {
-  var query = "SELECT DISTINCT schema_name " +
+  var query = "SELECT DISTINCT table_schema " +
               "FROM information_schema.tables " +
-              "WHERE schema_name NOT IN ('information_schema', 'blob', 'sys') " +
+              "WHERE table_schema NOT IN ('information_schema', 'blob', 'sys') " +
               "ORDER BY 1";
   return query;
 }
@@ -237,7 +255,7 @@ export function getSchemas() {
 export function getTables(schema) {
   var query = "SELECT table_name " +
                "FROM information_schema.tables " +
-               "WHERE schema_name='" + schema + "' " +
+               "WHERE table_schema='" + schema + "' " +
                "ORDER BY 1";
   return query;
 }

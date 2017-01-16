@@ -3,9 +3,9 @@ System.register(['lodash'], function(exports_1) {
     var lodash_1;
     var CrateQueryBuilder;
     function getSchemas() {
-        var query = "SELECT DISTINCT schema_name " +
+        var query = "SELECT DISTINCT table_schema " +
             "FROM information_schema.tables " +
-            "WHERE schema_name NOT IN ('information_schema', 'blob', 'sys') " +
+            "WHERE table_schema NOT IN ('information_schema', 'blob', 'sys') " +
             "ORDER BY 1";
         return query;
     }
@@ -13,7 +13,7 @@ System.register(['lodash'], function(exports_1) {
     function getTables(schema) {
         var query = "SELECT table_name " +
             "FROM information_schema.tables " +
-            "WHERE schema_name='" + schema + "' " +
+            "WHERE table_schema='" + schema + "' " +
             "ORDER BY 1";
         return query;
     }
@@ -72,8 +72,7 @@ System.register(['lodash'], function(exports_1) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
                     query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-                        "WHERE " + this.defaultTimeColumn + " >= ? AND " +
-                        this.defaultTimeColumn + " <= ?";
+                        "WHERE $timeFilter";
                     // WHERE
                     if (target.whereClauses && target.whereClauses.length) {
                         query += " AND " + this.renderWhereClauses(target.whereClauses);
@@ -128,6 +127,21 @@ System.register(['lodash'], function(exports_1) {
                     }
                     return query;
                 };
+                CrateQueryBuilder.prototype.renderAdhocFilters = function (filters) {
+                    var conditions = lodash_1["default"].map(filters, function (tag, index) {
+                        var str = "";
+                        var operator = tag.operator;
+                        var value = tag.value;
+                        if (index > 0) {
+                            str = (tag.condition || 'AND') + ' ';
+                        }
+                        if (operator === '=~') {
+                            operator = '~';
+                        }
+                        return str + '"' + tag.key + '" ' + operator + ' \'' + value.replace(/'/g, "''") + '\'';
+                    });
+                    return conditions.join(' ');
+                };
                 /**
                  * Builds SQL query for getting available columns from table.
                  * @return  {string}  SQL query.
@@ -135,7 +149,7 @@ System.register(['lodash'], function(exports_1) {
                 CrateQueryBuilder.prototype.getColumnsQuery = function () {
                     var query = "SELECT column_name " +
                         "FROM information_schema.columns " +
-                        "WHERE schema_name = '" + this.schema + "' " +
+                        "WHERE table_schema = '" + this.schema + "' " +
                         "AND table_name = '" + this.table + "' " +
                         "ORDER BY 1";
                     return query;
@@ -143,7 +157,7 @@ System.register(['lodash'], function(exports_1) {
                 CrateQueryBuilder.prototype.getNumericColumnsQuery = function () {
                     return "SELECT column_name " +
                         "FROM information_schema.columns " +
-                        "WHERE schema_name = '" + this.schema + "' " +
+                        "WHERE table_schema = '" + this.schema + "' " +
                         "AND table_name = '" + this.table + "' " +
                         "AND data_type in ('integer', 'long', 'short', 'double', 'float', 'byte') " +
                         "ORDER BY 1";
@@ -155,7 +169,8 @@ System.register(['lodash'], function(exports_1) {
                  */
                 CrateQueryBuilder.prototype.getValuesQuery = function (column, limit) {
                     var query = "SELECT DISTINCT " + column + " " +
-                        "FROM \"" + this.schema + "\".\"" + this.table + "\"";
+                        "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
+                        "WHERE $timeFilter";
                     if (limit) {
                         query += " LIMIT " + limit;
                     }

@@ -48,6 +48,10 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                         { name: 'Quarter', value: 'quarter' },
                         { name: 'Year', value: 'year' }
                     ];
+                    this.resultFormats = [
+                        { text: 'Time series', value: 'time_series' },
+                        { text: 'Table', value: 'table' },
+                    ];
                     var target_defaults = {
                         metricAggs: [
                             { type: 'avg', column: 'value' }

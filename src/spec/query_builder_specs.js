@@ -30,7 +30,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                              "AND hostname = 'backend01' " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
@@ -51,7 +51,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "load " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                            "ORDER BY time ASC";
 
       var query = ctx.queryBuilder.build(ctx.target);
@@ -67,7 +67,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                              "AND hostname = 'backend01' " +
                              "OR hostname = 'frontend01' " +
                            "GROUP BY time " +
@@ -84,7 +84,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                              "AND id IN ('a', 42) " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
@@ -103,7 +103,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                              "AND id IN ($id) " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
@@ -124,7 +124,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load), hostname " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                            "GROUP BY time, hostname " +
                            "ORDER BY time, hostname ASC";
 
@@ -145,7 +145,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "avg(load[\'1\']) AS \"load\" " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
 
@@ -166,7 +166,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT date_trunc('minute', ts) as time, " +
                            "sum(\"intValue\") " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ? " +
+                           "WHERE $timeFilter " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
 
@@ -181,7 +181,7 @@ describe('CrateQueryBuilder', function() {
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT column_name " +
                            "FROM information_schema.columns " +
-                           "WHERE schema_name = 'stats' " +
+                           "WHERE table_schema = 'stats' " +
                              "AND table_name = 'nodes' " +
                            "ORDER BY 1";
       var query = ctx.queryBuilder.getColumnsQuery();
@@ -194,7 +194,8 @@ describe('CrateQueryBuilder', function() {
 
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT DISTINCT load " +
-                           "FROM \"stats\".\"nodes\"";
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE $timeFilter";
       var query = ctx.queryBuilder.getValuesQuery('load');
       expect(query).to.equal(expected_query);
       done();
@@ -202,7 +203,7 @@ describe('CrateQueryBuilder', function() {
 
     it('should add limit to query if it passed', function(done) {
       var expected_query = "SELECT DISTINCT load " +
-                           "FROM \"stats\".\"nodes\" LIMIT 10";
+                           "FROM \"stats\".\"nodes\" WHERE $timeFilter LIMIT 10";
       var query = ctx.queryBuilder.getValuesQuery('load', 10);
       expect(query).to.equal(expected_query);
       done();

@@ -71,10 +71,11 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
             }],
         execute: function() {
             CrateDatasource = (function () {
-                function CrateDatasource(instanceSettings, $q, backendSrv, templateSrv) {
+                function CrateDatasource(instanceSettings, $q, backendSrv, templateSrv, timeSrv) {
                     this.$q = $q;
                     this.backendSrv = backendSrv;
                     this.templateSrv = templateSrv;
+                    this.timeSrv = timeSrv;
                     this.type = instanceSettings.type;
                     this.url = instanceSettings.url;
                     this.name = instanceSettings.name;
@@ -87,6 +88,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     this.$q = $q;
                     this.backendSrv = backendSrv;
                     this.templateSrv = templateSrv;
+                    this.timeSrv = timeSrv;
                     this.queryBuilder = new query_builder_1.CrateQueryBuilder(this.schema, this.table, this.defaultTimeColumn, this.defaultGroupInterval, this.templateSrv);
                     this.CRATE_ROWS_LIMIT = 10000;
                 }
@@ -96,6 +98,8 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     var timeFrom = Math.ceil(dateMath.parse(options.range.from));
                     var timeTo = Math.ceil(dateMath.parse(options.range.to));
                     var getInterval = this.$q.when(convertToCrateInterval(options.interval));
+                    var timeFilter = this.getTimeFilter(timeFrom, timeTo);
+                    var scopedVars = options.scopedVars ? lodash_1["default"].cloneDeep(options.scopedVars) : {};
                     var queries = lodash_1["default"].map(options.targets, function (target) {
                         if (target.hide || (target.rawQuery && !target.query)) {
                             return [];
@@ -123,7 +127,12 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                 });
                             }
                             return getQuery.then(function (query) {
-                                query = _this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
+                                var adhocFilters = _this.templateSrv.getAdhocFilters(_this.name);
+                                if (adhocFilters.length > 0) {
+                                    timeFilter += " AND " + _this.queryBuilder.renderAdhocFilters(adhocFilters);
+                                }
+                                scopedVars.timeFilter = { value: timeFilter };
+                                query = _this.templateSrv.replace(query, scopedVars, formatCrateValue);
                                 return _this._sql_query(query, [timeFrom, timeTo])
                                     .then(function (result) {
                                     return response_handler_1["default"](target, result);
@@ -190,11 +199,31 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     return this._sql_query(query).then(function (result) {
                         return lodash_1["default"].map(lodash_1["default"].flatten(result.rows), function (row) {
                             return {
-                                text: row,
+                                text: row.toString(),
                                 value: row
                             };
                         });
                     });
+                };
+                CrateDatasource.prototype.getTimeFilter = function (timeFrom, timeTo) {
+                    return this.defaultTimeColumn + " >= '" + timeFrom + "' and " + this.defaultTimeColumn + " <= '" + timeTo + "'";
+                };
+                CrateDatasource.prototype.getTagKeys = function (options) {
+                    var query = this.queryBuilder.getColumnsQuery();
+                    return this.metricFindQuery(query);
+                };
+                CrateDatasource.prototype.getTagValues = function (options) {
+                    var range = this.timeSrv.timeRange();
+                    var timeFrom = this.getCrateTime(range.from);
+                    var timeTo = this.getCrateTime(range.to);
+                    var timeFilter = this.getTimeFilter(timeFrom, timeTo);
+                    var scopedVars = { timeFilter: { value: timeFilter } };
+                    var query = this.queryBuilder.getValuesQuery(options.key, this.CRATE_ROWS_LIMIT);
+                    query = this.templateSrv.replace(query, scopedVars);
+                    return this.metricFindQuery(query);
+                };
+                CrateDatasource.prototype.getCrateTime = function (date) {
+                    return date.valueOf();
                 };
                 /**
                  * Sends SQL query to Crate and returns result.

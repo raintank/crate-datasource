@@ -157,7 +157,7 @@ export class CrateDatasource {
     return this._sql_query(query).then(result => {
       return _.map(_.flatten(result.rows), row => {
         return {
-          text: row,
+          text: row.toString(),
           value: row
         };
       });

@@ -199,7 +199,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     return this._sql_query(query).then(function (result) {
                         return lodash_1["default"].map(lodash_1["default"].flatten(result.rows), function (row) {
                             return {
-                                text: row,
+                                text: row.toString(),
                                 value: row
                             };
                         });

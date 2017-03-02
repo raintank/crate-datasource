@@ -3,9 +3,9 @@ System.register(['lodash'], function(exports_1) {
     var lodash_1;
     var CrateQueryBuilder;
     function getSchemas() {
-        var query = "SELECT DISTINCT table_schema " +
-            "FROM information_schema.tables " +
-            "WHERE table_schema NOT IN ('information_schema', 'blob', 'sys') " +
+        var query = "SELECT schema_name " +
+            "FROM information_schema.schemata " +
+            "WHERE schema_name NOT IN ('information_schema', 'blob', 'sys', 'pg_catalog') " +
             "ORDER BY 1";
         return query;
     }

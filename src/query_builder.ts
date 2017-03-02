@@ -49,7 +49,7 @@ export class CrateQueryBuilder {
     }
     query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
              "WHERE $timeFilter";
-    
+
     // WHERE
     if (target.whereClauses && target.whereClauses.length) {
       query += " AND " + this.renderWhereClauses(target.whereClauses);
@@ -245,9 +245,9 @@ export class CrateQueryBuilder {
 }
 
 export function getSchemas() {
-  var query = "SELECT DISTINCT table_schema " +
-              "FROM information_schema.tables " +
-              "WHERE table_schema NOT IN ('information_schema', 'blob', 'sys') " +
+  var query = "SELECT schema_name " +
+              "FROM information_schema.schemata " +
+              "WHERE schema_name NOT IN ('information_schema', 'blob', 'sys', 'pg_catalog') " +
               "ORDER BY 1";
   return query;
 }

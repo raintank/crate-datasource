@@ -27,7 +27,7 @@ describe('CrateQueryBuilder', function() {
     });
 
     it('should build proper Crate SQL query', function(done) {
-      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+      var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
@@ -52,6 +52,7 @@ describe('CrateQueryBuilder', function() {
                            "load " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
+                           "GROUP BY time, load " +
                            "ORDER BY time ASC";
 
       var query = ctx.queryBuilder.build(ctx.target);
@@ -64,7 +65,7 @@ describe('CrateQueryBuilder', function() {
         {condition: 'AND', column: 'hostname', operator: '=', value: 'backend01'},
         {condition: 'OR', column: 'hostname', operator: '=', value: 'frontend01'}
       ];
-      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+      var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
@@ -81,7 +82,7 @@ describe('CrateQueryBuilder', function() {
       ctx.target.whereClauses = [
         {condition: 'AND', column: 'id', operator: 'IN', value: 'a, 42'}
       ];
-      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+      var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
@@ -100,7 +101,7 @@ describe('CrateQueryBuilder', function() {
         {condition: 'AND', column: 'id', operator: 'IN', value: '$id'}
       ];
 
-      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+      var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
@@ -121,7 +122,7 @@ describe('CrateQueryBuilder', function() {
         groupByColumns: ['hostname'],
       };
 
-      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+      var expected_query = "SELECT ts as time, " +
                            "avg(load), hostname " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
@@ -142,7 +143,7 @@ describe('CrateQueryBuilder', function() {
         groupByColumns: [],
       };
 
-      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+      var expected_query = "SELECT ts as time, " +
                            "avg(load[\'1\']) AS \"load\" " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
@@ -163,7 +164,7 @@ describe('CrateQueryBuilder', function() {
         groupByColumns: [],
       };
 
-      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+      var expected_query = "SELECT ts as time, " +
                            "sum(\"intValue\") " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
@@ -195,7 +196,7 @@ describe('CrateQueryBuilder', function() {
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT DISTINCT load " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter";
+                           "WHERE ts >= ? AND ts <= ?";
       var query = ctx.queryBuilder.getValuesQuery('load');
       expect(query).to.equal(expected_query);
       done();
@@ -203,7 +204,8 @@ describe('CrateQueryBuilder', function() {
 
     it('should add limit to query if it passed', function(done) {
       var expected_query = "SELECT DISTINCT load " +
-                           "FROM \"stats\".\"nodes\" WHERE $timeFilter LIMIT 10";
+                           "FROM \"stats\".\"nodes\" WHERE ts >= ? AND ts <= ? " +
+                           "LIMIT 10";
       var query = ctx.queryBuilder.getValuesQuery('load', 10);
       expect(query).to.equal(expected_query);
       done();

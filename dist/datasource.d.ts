@@ -18,7 +18,6 @@ export declare class CrateDatasource {
     CRATE_ROWS_LIMIT: number;
     constructor(instanceSettings: any, $q: any, backendSrv: any, templateSrv: any, timeSrv: any);
     query(options: any): any;
-    _count_series_query(target: any, timeFrom: any, timeTo: any, options: any): any;
     /**
      * Required.
      * Checks datasource and returns Crate cluster name and version or

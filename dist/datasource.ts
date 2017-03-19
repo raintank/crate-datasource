@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import * as dateMath from 'app/core/utils/datemath';
 import moment from 'moment';
-import {CrateQueryBuilder} from './query_builder';
+import {CrateQueryBuilder, getEnabledAggs, getRawAggs} from './query_builder';
 import handleResponse from './response_handler';
 
 export class CrateDatasource {
@@ -54,64 +54,51 @@ export class CrateDatasource {
   query(options) {
     let timeFrom = Math.ceil(dateMath.parse(options.range.from));
     let timeTo = Math.ceil(dateMath.parse(options.range.to));
-    let getInterval = this.$q.when(convertToCrateInterval(options.interval));
     let timeFilter = this.getTimeFilter(timeFrom, timeTo);
     let scopedVars = options.scopedVars ? _.cloneDeep(options.scopedVars) : {};
 
     let queries = _.map(options.targets, target => {
-      if (target.hide || (target.rawQuery && !target.query)) {
-        return [];
-      } else {
-        let getQuery: any;
+      if (target.hide || (target.rawQuery && !target.query)) { return []; }
 
-        if (target.rawQuery) {
-          getQuery = this.$q.when(target.query);
+      let query: string;
+      let getQuery: any;
+      let getRawAggQuery: any;
+      let getRawAggInterval: any;
+
+      if (target.rawQuery) {
+        query = target.query;
+      } else {
+        let minInterval = Math.ceil((timeTo - timeFrom ) / this.CRATE_ROWS_LIMIT);
+        let interval;
+
+        if (target.timeInterval === 'auto') {
+          interval = minInterval > 1 ? minInterval : null;
+        } else if (target.timeInterval === 'auto_gf') {
+          // Use intervalMs for panel, provided by Grafana
+          interval = options.intervalMs;
         } else {
-          if (target.timeInterval !== 'auto') {
-            getInterval = this.$q.when(target.timeInterval);
-          } else {
-            // Use SELECT count(*) query for calculating required time interval
-            // This is needed because Crate limit response to 10 000 rows.
-            getInterval = this._count_series_query(target, timeFrom, timeTo, options)
-              .then(count => {
-                let min_interval = (timeTo - timeFrom ) / (this.CRATE_ROWS_LIMIT / count);
-                return getMinCrateInterval(min_interval);
-              });
-          }
-          getQuery = getInterval.then(interval => {
-            return this.queryBuilder.build(target, interval)
-          });
+          interval = crateToMsInterval(target.timeInterval);
         }
-        return getQuery.then(query => {
-          let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
-          if (adhocFilters.length > 0) {
-            timeFilter += " AND " + this.queryBuilder.renderAdhocFilters(adhocFilters);
-          }
-          scopedVars.timeFilter = {value: timeFilter};
-          query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
-          return this._sql_query(query, [timeFrom, timeTo])
-            .then(result => {
-              return handleResponse(target, result);
-            });
-        });
+
+        query = this.queryBuilder.build(target, interval);
       }
+
+      let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
+      if (adhocFilters.length > 0) {
+        timeFilter += " AND " + this.queryBuilder.renderAdhocFilters(adhocFilters);
+      }
+      scopedVars.timeFilter = {value: timeFilter};
+      query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
+      return this._sql_query(query, [timeFrom, timeTo])
+        .then(result => {
+          return handleResponse(target, result);
+        });
     });
     return this.$q.all(_.flatten(queries)).then(result => {
       return {
         data: _.flatten(result)
       };
     });
-  }
-
-  // Workaround for limit datapoints requested from Crate
-  // Count points returned by time series query
-  _count_series_query(target, timeFrom, timeTo, options) {
-    let query = this.queryBuilder.buildCountPointsQuery(target);
-    query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
-    return this._sql_query(query, [timeFrom, timeTo])
-      .then(result => {
-        return result.rowcount;
-      });
   }
 
   /**
@@ -272,6 +259,25 @@ export function convertToCrateInterval(grafanaInterval) {
   return crateInterval ? crateInterval.value : undefined;
 }
 
+function crateToMsInterval(crateInterval: string) {
+  let intervals_s = {
+    'year': 60 * 60 * 24 * 30 * 12,
+    'quarter': 60 * 60 * 24 * 30 * 3,
+    'month': 60 * 60 * 24 * 30,
+    'week': 60 * 60 * 24 * 7,
+    'day': 60 * 60 * 24,
+    'hour': 60 * 60,
+    'minute': 60,
+    'second': 1
+  };
+
+  if (intervals_s[crateInterval]) {
+    return intervals_s[crateInterval] * 1000; // Return ms
+  } else {
+    return undefined;
+  }
+}
+
 function getMinCrateInterval(ms) {
   let seconds = ms / 1000;
   if (seconds > 60 * 60 * 24 * 30 * 3)
@@ -286,6 +292,8 @@ function getMinCrateInterval(ms) {
     return 'day';
   else if (seconds > 60)
     return 'hour';
+  else if (seconds > 1)
+    return 'second';
   else
-    return 'minute';
+    return 'second';
 }

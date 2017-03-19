@@ -29,6 +29,28 @@ System.register(['lodash'], function(exports_1) {
     function isWithUpperCase(str) {
         return str.toLowerCase() !== str;
     }
+    function aggregateMetrics(metricAggs, aggType) {
+        var aggs = lodash_1["default"].cloneDeep(metricAggs);
+        return lodash_1["default"].map(aggs, function (agg) {
+            if (agg.type === 'raw') {
+                agg.type = aggType;
+                return agg;
+            }
+            else {
+                return agg;
+            }
+        });
+    }
+    function getEnabledAggs(metricAggs) {
+        return lodash_1["default"].filter(metricAggs, function (agg) {
+            return !agg.hide;
+        });
+    }
+    exports_1("getEnabledAggs", getEnabledAggs);
+    function getRawAggs(metricAggs) {
+        return lodash_1["default"].filter(metricAggs, { type: 'raw' });
+    }
+    exports_1("getRawAggs", getRawAggs);
     return {
         setters:[
             function (lodash_1_1) {
@@ -47,26 +69,31 @@ System.register(['lodash'], function(exports_1) {
                 /**
                  * Builds Crate SQL query from given target object.
                  * @param  {any}     target         Target object.
-                 * @param  {string}  groupInterval  Crate interval for date_trunc() function.
+                 * @param  {number}  groupInterval  Interval for grouping values.
+                 * @param  {string}  defaultAgg     Default aggregation for values.
                  * @return {string}                 SQL query.
                  */
-                CrateQueryBuilder.prototype.build = function (target, groupInterval) {
-                    if (groupInterval === void 0) { groupInterval = this.defaultGroupInterval; }
-                    var enabledAggs = lodash_1["default"].filter(target.metricAggs, function (agg) {
-                        return !agg.hide;
-                    });
-                    var rawAggs = lodash_1["default"].filter(enabledAggs, { type: 'raw' });
-                    // SELECT
+                CrateQueryBuilder.prototype.build = function (target, groupInterval, defaultAgg) {
+                    if (groupInterval === void 0) { groupInterval = 0; }
+                    if (defaultAgg === void 0) { defaultAgg = 'avg'; }
                     var query;
-                    if (rawAggs.length) {
-                        query = "SELECT " + this.defaultTimeColumn + " as time, " +
-                            this.renderMetricAggs(target.metricAggs);
+                    var timeExp;
+                    var aggs = getEnabledAggs(target.metricAggs);
+                    var rawAggs = getRawAggs(aggs);
+                    if (!aggs.length) {
+                        return null;
+                    }
+                    if (groupInterval) {
+                        // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
+                        timeExp = "floor(" + this.defaultTimeColumn + "/" + groupInterval + ")*" + groupInterval;
+                        aggs = aggregateMetrics(aggs, 'avg');
                     }
                     else {
-                        query = "SELECT date_trunc('" + groupInterval + "', " +
-                            this.defaultTimeColumn + ") as time, " +
-                            this.renderMetricAggs(target.metricAggs);
+                        timeExp = this.defaultTimeColumn;
                     }
+                    // SELECT
+                    var renderedAggs = this.renderMetricAggs(aggs);
+                    query = "SELECT " + timeExp + " as time, " + renderedAggs;
                     // Add GROUP BY columns to SELECT statement.
                     if (target.groupByColumns && target.groupByColumns.length) {
                         query += ", " + target.groupByColumns.join(', ');
@@ -78,11 +105,12 @@ System.register(['lodash'], function(exports_1) {
                         query += " AND " + this.renderWhereClauses(target.whereClauses);
                     }
                     // GROUP BY
-                    if (!rawAggs.length) {
-                        query += " GROUP BY time";
-                        if (target.groupByColumns && target.groupByColumns.length) {
-                            query += ", " + target.groupByColumns.join(', ');
-                        }
+                    query += " GROUP BY time";
+                    if (!groupInterval && rawAggs.length) {
+                        query += ", " + this.renderMetricAggs(rawAggs, false);
+                    }
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
                     }
                     // If GROUP BY specified, sort also by selected columns
                     query += " ORDER BY time";
@@ -90,41 +118,6 @@ System.register(['lodash'], function(exports_1) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
                     query += " ASC";
-                    return query;
-                };
-                // workaround for limit datapoints requested from Crate
-                CrateQueryBuilder.prototype.buildCountPointsQuery = function (target) {
-                    var enabledAggs = lodash_1["default"].filter(target.metricAggs, function (agg) {
-                        return !agg.hide;
-                    });
-                    var rawAggs = lodash_1["default"].filter(enabledAggs, { type: 'raw' });
-                    // SELECT
-                    var query;
-                    var aggs;
-                    var renderedAggs = lodash_1["default"].map(enabledAggs, function (agg) {
-                        return "count" + "(" + agg.column + ")";
-                    });
-                    if (renderedAggs.length) {
-                        aggs = renderedAggs.join(', ');
-                    }
-                    else {
-                        aggs = "";
-                    }
-                    query = "SELECT count(*) " +
-                        "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-                        "WHERE " + this.defaultTimeColumn + " >= ? AND " +
-                        this.defaultTimeColumn + " <= ?";
-                    // WHERE
-                    if (target.whereClauses && target.whereClauses.length) {
-                        query += " AND " + this.renderWhereClauses(target.whereClauses);
-                    }
-                    // GROUP BY
-                    if (!rawAggs.length) {
-                        query += " GROUP BY ";
-                        if (target.groupByColumns && target.groupByColumns.length) {
-                            query += target.groupByColumns.join(', ');
-                        }
-                    }
                     return query;
                 };
                 CrateQueryBuilder.prototype.renderAdhocFilters = function (filters) {
@@ -168,21 +161,22 @@ System.register(['lodash'], function(exports_1) {
                  * @param  {number}  limit   Optional. Limit number returned values.
                  */
                 CrateQueryBuilder.prototype.getValuesQuery = function (column, limit) {
-                    var query = "SELECT DISTINCT " + column + " " +
-                        "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-                        "WHERE $timeFilter";
+                    var query = ("SELECT DISTINCT " + column + " ") +
+                        ("FROM \"" + this.schema + "\".\"" + this.table + "\" ") +
+                        ("WHERE " + this.defaultTimeColumn + " >= ? AND " + this.defaultTimeColumn + " <= ?");
                     if (limit) {
                         query += " LIMIT " + limit;
                     }
                     return query;
                 };
-                CrateQueryBuilder.prototype.renderMetricAggs = function (metricAggs) {
+                CrateQueryBuilder.prototype.renderMetricAggs = function (metricAggs, withAlias) {
+                    if (withAlias === void 0) { withAlias = true; }
                     var enabledAggs = lodash_1["default"].filter(metricAggs, function (agg) {
                         return !agg.hide;
                     });
                     var renderedAggs = lodash_1["default"].map(enabledAggs, function (agg) {
                         var alias = '';
-                        if (agg.alias) {
+                        if (agg.alias && withAlias) {
                             alias = ' AS \"' + agg.alias + '\"';
                         }
                         var column = quoteColumn(agg.column);

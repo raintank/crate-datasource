@@ -3,9 +3,9 @@
 import _ from 'lodash';
 
 export default function handleResponse(target, result) {
-  if (target.resultFormat == 'table') {
+  if (target.resultFormat === 'table') {
     return handleTableResponse(target, result);
-  } 
+  }
 
   if (target.rawQuery) {
     return handleRawResponse(target, result);
@@ -15,7 +15,13 @@ export default function handleResponse(target, result) {
 }
 
 function handleTableResponse(target, result) {
-  return { columns: result.cols.map((e) => { return {text: e}; }), rows: result.rows, type: 'table' };
+  return {
+    columns: _.map(result.cols, col => {
+      return {text: col};
+    }),
+    rows: result.rows,
+    type: 'table'
+  };
 }
 
 function handleRawResponse(target, result) {
@@ -123,10 +129,11 @@ function handleBuildedResponse(target, result) {
 
 function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
   return _.map(rows, row => {
-    return [
-      Number(row[valueColumnIndex]), // value
-      Number(row[timeColumnIndex])  // timestamp
-    ];
+    let ts = Number(row[timeColumnIndex]);
+    let val = row[valueColumnIndex];
+    val = val !== null ? Number(val) : null;
+
+    return [val, ts];
   });
 }
 

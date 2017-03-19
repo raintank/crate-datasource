@@ -15,7 +15,7 @@ export declare class CrateDatasourceQueryCtrl extends QueryCtrl {
     aliasBySegment: any;
     resultFormats: any[];
     constructor($scope: any, $injector: any, $q: any, uiSegmentSrv: any, templateSrv: any);
-    crateQuery(query: any): any;
+    crateQuery(query: any, args?: any[]): any;
     getCollapsedText(): string;
     onChangeInternal(): void;
     groupBySegmentChanged(segment: any, index: any): void;

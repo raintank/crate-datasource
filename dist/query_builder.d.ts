@@ -9,11 +9,11 @@ export declare class CrateQueryBuilder {
     /**
      * Builds Crate SQL query from given target object.
      * @param  {any}     target         Target object.
-     * @param  {string}  groupInterval  Crate interval for date_trunc() function.
+     * @param  {number}  groupInterval  Interval for grouping values.
+     * @param  {string}  defaultAgg     Default aggregation for values.
      * @return {string}                 SQL query.
      */
-    build(target: any, groupInterval?: string): string;
-    buildCountPointsQuery(target: any): string;
+    build(target: any, groupInterval?: number, defaultAgg?: string): string;
     renderAdhocFilters(filters: any): any;
     /**
      * Builds SQL query for getting available columns from table.
@@ -27,9 +27,11 @@ export declare class CrateQueryBuilder {
      * @param  {number}  limit   Optional. Limit number returned values.
      */
     getValuesQuery(column: string, limit?: number): string;
-    private renderMetricAggs(metricAggs);
+    private renderMetricAggs(metricAggs, withAlias?);
     private renderWhereClauses(whereClauses);
     private containsVariable(str);
 }
 export declare function getSchemas(): string;
 export declare function getTables(schema: any): string;
+export declare function getEnabledAggs(metricAggs: any): any;
+export declare function getRawAggs(metricAggs: any): any;

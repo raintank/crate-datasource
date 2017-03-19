@@ -23,25 +23,30 @@ export class CrateQueryBuilder {
   /**
    * Builds Crate SQL query from given target object.
    * @param  {any}     target         Target object.
-   * @param  {string}  groupInterval  Crate interval for date_trunc() function.
+   * @param  {number}  groupInterval  Interval for grouping values.
+   * @param  {string}  defaultAgg     Default aggregation for values.
    * @return {string}                 SQL query.
    */
-  build(target: any, groupInterval = this.defaultGroupInterval) {
-    let enabledAggs = _.filter(target.metricAggs, (agg) => {
-      return !agg.hide;
-    });
-    let rawAggs = _.filter(enabledAggs, {type: 'raw'});
+  build(target: any, groupInterval=0, defaultAgg='avg') {
+    let query: string;
+    let timeExp: string;
+
+    let aggs = getEnabledAggs(target.metricAggs);
+    let rawAggs = getRawAggs(aggs);
+
+    if (!aggs.length) { return null; }
+
+    if (groupInterval) {
+      // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
+      timeExp = `floor(${this.defaultTimeColumn}/${groupInterval})*${groupInterval}`;
+      aggs = aggregateMetrics(aggs, 'avg');
+    } else {
+      timeExp = this.defaultTimeColumn;
+    }
 
     // SELECT
-    let query: string;
-    if (rawAggs.length) {
-      query = "SELECT " + this.defaultTimeColumn + " as time, " +
-        this.renderMetricAggs(target.metricAggs);
-    } else {
-      query = "SELECT date_trunc('" + groupInterval + "', " +
-        this.defaultTimeColumn + ") as time, " +
-        this.renderMetricAggs(target.metricAggs);
-    }
+    let renderedAggs = this.renderMetricAggs(aggs);
+    query = "SELECT " + timeExp + " as time, " + renderedAggs;
 
     // Add GROUP BY columns to SELECT statement.
     if (target.groupByColumns && target.groupByColumns.length) {
@@ -56,11 +61,13 @@ export class CrateQueryBuilder {
     }
 
     // GROUP BY
-    if (!rawAggs.length) {
-      query += " GROUP BY time";
-      if (target.groupByColumns && target.groupByColumns.length) {
-        query += ", " + target.groupByColumns.join(', ');
-      }
+    query += " GROUP BY time";
+    if (!groupInterval && rawAggs.length) {
+      query += ", " + this.renderMetricAggs(rawAggs, false);
+    }
+
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
     }
 
     // If GROUP BY specified, sort also by selected columns
@@ -69,46 +76,6 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
     query += " ASC";
-
-    return query;
-  }
-
-  // workaround for limit datapoints requested from Crate
-  buildCountPointsQuery(target: any) {
-    let enabledAggs = _.filter(target.metricAggs, (agg) => {
-      return !agg.hide;
-    });
-    let rawAggs = _.filter(enabledAggs, {type: 'raw'});
-
-    // SELECT
-    let query: string;
-    let aggs: string;
-    let renderedAggs = _.map(enabledAggs, (agg) => {
-      return "count" + "(" + agg.column + ")";
-    });
-    if (renderedAggs.length) {
-      aggs = renderedAggs.join(', ');
-    } else {
-      aggs = "";
-    }
-
-    query = "SELECT count(*) " +
-      "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-      "WHERE " + this.defaultTimeColumn + " >= ? AND " +
-        this.defaultTimeColumn + " <= ?";
-
-    // WHERE
-    if (target.whereClauses && target.whereClauses.length) {
-      query += " AND " + this.renderWhereClauses(target.whereClauses);
-    }
-
-    // GROUP BY
-    if (!rawAggs.length) {
-      query += " GROUP BY ";
-      if (target.groupByColumns && target.groupByColumns.length) {
-        query += target.groupByColumns.join(', ');
-      }
-    }
 
     return query;
   }
@@ -159,9 +126,9 @@ export class CrateQueryBuilder {
    * @param  {number}  limit   Optional. Limit number returned values.
    */
   getValuesQuery(column: string, limit?: number) {
-    let query = "SELECT DISTINCT " + column + " " +
-                 "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-                 "WHERE $timeFilter";
+    let query = `SELECT DISTINCT ${column} ` +
+                `FROM "${this.schema}"."${this.table}" ` +
+                `WHERE ${this.defaultTimeColumn} >= ? AND ${this.defaultTimeColumn} <= ?`;
 
     if (limit) {
       query += " LIMIT " + limit;
@@ -169,14 +136,14 @@ export class CrateQueryBuilder {
     return query;
   }
 
-  private renderMetricAggs(metricAggs): string {
+  private renderMetricAggs(metricAggs: any, withAlias=true): string {
     let enabledAggs = _.filter(metricAggs, (agg) => {
       return !agg.hide;
     });
 
     let renderedAggs = _.map(enabledAggs, (agg) => {
       let alias = '';
-      if (agg.alias) {
+      if (agg.alias && withAlias) {
         alias = ' AS \"' + agg.alias + '\"';
       }
 
@@ -270,4 +237,26 @@ function quoteColumn(column: string): string {
 
 function isWithUpperCase(str: string): boolean {
   return str.toLowerCase() !== str;
+}
+
+function aggregateMetrics(metricAggs: any, aggType: string) {
+  let aggs = _.cloneDeep(metricAggs);
+  return _.map(aggs, agg => {
+    if (agg.type === 'raw') {
+      agg.type = aggType;
+      return agg;
+    } else {
+      return agg;
+    }
+  });
+}
+
+export function getEnabledAggs(metricAggs) {
+  return _.filter(metricAggs, (agg) => {
+    return !agg.hide;
+  });
+}
+
+export function getRawAggs(metricAggs) {
+  return _.filter(metricAggs, {type: 'raw'});
 }

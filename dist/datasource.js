@@ -38,6 +38,24 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
         return crateInterval ? crateInterval.value : undefined;
     }
     exports_1("convertToCrateInterval", convertToCrateInterval);
+    function crateToMsInterval(crateInterval) {
+        var intervals_s = {
+            'year': 60 * 60 * 24 * 30 * 12,
+            'quarter': 60 * 60 * 24 * 30 * 3,
+            'month': 60 * 60 * 24 * 30,
+            'week': 60 * 60 * 24 * 7,
+            'day': 60 * 60 * 24,
+            'hour': 60 * 60,
+            'minute': 60,
+            'second': 1
+        };
+        if (intervals_s[crateInterval]) {
+            return intervals_s[crateInterval] * 1000; // Return ms
+        }
+        else {
+            return undefined;
+        }
+    }
     function getMinCrateInterval(ms) {
         var seconds = ms / 1000;
         if (seconds > 60 * 60 * 24 * 30 * 3)
@@ -99,7 +117,6 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     var _this = this;
                     var timeFrom = Math.ceil(dateMath.parse(options.range.from));
                     var timeTo = Math.ceil(dateMath.parse(options.range.to));
-                    var getInterval = this.$q.when(convertToCrateInterval(options.interval));
                     var timeFilter = this.getTimeFilter(timeFrom, timeTo);
                     var scopedVars = options.scopedVars ? lodash_1["default"].cloneDeep(options.scopedVars) : {};
                     var queries = lodash_1["default"].map(options.targets, function (target) {
@@ -114,13 +131,12 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                             query = target.query;
                         }
                         else {
-                            if (target.timeInterval !== 'auto') {
-                                getInterval = _this.$q.when(target.timeInterval);
-                                getRawAggInterval = _this.$q.when(1);
-                            }
                             var minInterval = Math.ceil((timeTo - timeFrom) / _this.CRATE_ROWS_LIMIT);
-                            minInterval = minInterval > 1 ? minInterval : null;
-                            query = _this.queryBuilder.build(target, minInterval);
+                            var interval = minInterval > 1 ? minInterval : null;
+                            if (target.timeInterval !== 'auto') {
+                                interval = crateToMsInterval(target.timeInterval);
+                            }
+                            query = _this.queryBuilder.build(target, interval);
                         }
                         var adhocFilters = _this.templateSrv.getAdhocFilters(_this.name);
                         if (adhocFilters.length > 0) {

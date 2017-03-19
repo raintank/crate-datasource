@@ -54,7 +54,6 @@ export class CrateDatasource {
   query(options) {
     let timeFrom = Math.ceil(dateMath.parse(options.range.from));
     let timeTo = Math.ceil(dateMath.parse(options.range.to));
-    let getInterval = this.$q.when(convertToCrateInterval(options.interval));
     let timeFilter = this.getTimeFilter(timeFrom, timeTo);
     let scopedVars = options.scopedVars ? _.cloneDeep(options.scopedVars) : {};
 
@@ -69,14 +68,14 @@ export class CrateDatasource {
       if (target.rawQuery) {
         query = target.query;
       } else {
+        let minInterval = Math.ceil((timeTo - timeFrom ) / this.CRATE_ROWS_LIMIT);
+        let interval = minInterval > 1 ? minInterval : null;
+
         if (target.timeInterval !== 'auto') {
-          getInterval = this.$q.when(target.timeInterval);
-          getRawAggInterval = this.$q.when(1);
+          interval = crateToMsInterval(target.timeInterval);
         }
 
-        let minInterval = Math.ceil((timeTo - timeFrom ) / this.CRATE_ROWS_LIMIT);
-        minInterval = minInterval > 1 ? minInterval : null;
-        query = this.queryBuilder.build(target, minInterval);
+        query = this.queryBuilder.build(target, interval);
       }
 
       let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
@@ -253,6 +252,25 @@ export function convertToCrateInterval(grafanaInterval) {
   let unit = parsedInterval[2];
   let crateInterval = _.find(crateIntervals, {'shorthand': unit});
   return crateInterval ? crateInterval.value : undefined;
+}
+
+function crateToMsInterval(crateInterval: string) {
+  let intervals_s = {
+    'year': 60 * 60 * 24 * 30 * 12,
+    'quarter': 60 * 60 * 24 * 30 * 3,
+    'month': 60 * 60 * 24 * 30,
+    'week': 60 * 60 * 24 * 7,
+    'day': 60 * 60 * 24,
+    'hour': 60 * 60,
+    'minute': 60,
+    'second': 1
+  };
+
+  if (intervals_s[crateInterval]) {
+    return intervals_s[crateInterval] * 1000; // Return ms
+  } else {
+    return undefined;
+  }
 }
 
 function getMinCrateInterval(ms) {

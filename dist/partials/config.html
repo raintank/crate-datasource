@@ -26,17 +26,19 @@
 
 	<div class="gf-form-inline">
 		<div class="gf-form">
-			<span class="gf-form-label width-8">Time column</span>
-			<input class="gf-form-input width-8" type="text"
+			<span class="gf-form-label width-12">Time column</span>
+			<input class="gf-form-input width-11" type="text"
 				ng-model='ctrl.current.jsonData.timeColumn'
 				placeholder="timestamp"
 				ng-init="" required>
 			</input>
 		</div>
+	</div>
 
+	<div class="gf-form-inline">
 		<div class="gf-form">
 			<span class="gf-form-label width-12">Default grouping interval</span>
-			<select class="gf-form-input width-7"
+			<select class="gf-form-input width-11"
 				ng-model="ctrl.current.jsonData.timeInterval"
 				ng-options="f.value as f.name for f in ctrl.timeIntervals">
 			</select>

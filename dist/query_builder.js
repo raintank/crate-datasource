@@ -161,9 +161,9 @@ System.register(['lodash'], function(exports_1) {
                  * @param  {number}  limit   Optional. Limit number returned values.
                  */
                 CrateQueryBuilder.prototype.getValuesQuery = function (column, limit) {
-                    var query = "SELECT DISTINCT " + column + " " +
-                        "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-                        "WHERE $timeFilter";
+                    var query = ("SELECT DISTINCT " + column + " ") +
+                        ("FROM \"" + this.schema + "\".\"" + this.table + "\" ") +
+                        ("WHERE " + this.defaultTimeColumn + " >= ? AND " + this.defaultTimeColumn + " <= ?");
                     if (limit) {
                         query += " LIMIT " + limit;
                     }

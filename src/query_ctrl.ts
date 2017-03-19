@@ -76,8 +76,8 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
     this.fixSegments(this.groupBySegments);
   }
 
-  crateQuery(query) {
-    return this.datasource._sql_query(query).then(response => {
+  crateQuery(query, args = []) {
+    return this.datasource._sql_query(query, args).then(response => {
       return response.rows;
     });
   }
@@ -179,7 +179,8 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
   getValues(column, limit = 10) {
     let self = this;
-    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit))
+    let time_range = [this.panelCtrl.range.from.valueOf(), this.panelCtrl.range.to.valueOf()];
+    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit), time_range)
       .then(rows => {
         return self.transformToSegments(_.flatten(rows), true);
       });

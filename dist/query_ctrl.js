@@ -73,8 +73,9 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                     this.removeWhereSegment = uiSegmentSrv.newSegment({ fake: true, value: '-- remove --' });
                     this.fixSegments(this.groupBySegments);
                 }
-                CrateDatasourceQueryCtrl.prototype.crateQuery = function (query) {
-                    return this.datasource._sql_query(query).then(function (response) {
+                CrateDatasourceQueryCtrl.prototype.crateQuery = function (query, args) {
+                    if (args === void 0) { args = []; }
+                    return this.datasource._sql_query(query, args).then(function (response) {
                         return response.rows;
                     });
                 };
@@ -164,7 +165,8 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                 CrateDatasourceQueryCtrl.prototype.getValues = function (column, limit) {
                     if (limit === void 0) { limit = 10; }
                     var self = this;
-                    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit))
+                    var time_range = [this.panelCtrl.range.from.valueOf(), this.panelCtrl.range.to.valueOf()];
+                    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit), time_range)
                         .then(function (rows) {
                         return self.transformToSegments(lodash_1["default"].flatten(rows), true);
                     });

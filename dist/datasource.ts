@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import * as dateMath from 'app/core/utils/datemath';
 import moment from 'moment';
-import {CrateQueryBuilder} from './query_builder';
+import {CrateQueryBuilder, getEnabledAggs, getRawAggs} from './query_builder';
 import handleResponse from './response_handler';
 
 export class CrateDatasource {
@@ -59,42 +59,36 @@ export class CrateDatasource {
     let scopedVars = options.scopedVars ? _.cloneDeep(options.scopedVars) : {};
 
     let queries = _.map(options.targets, target => {
-      if (target.hide || (target.rawQuery && !target.query)) {
-        return [];
-      } else {
-        let getQuery: any;
+      if (target.hide || (target.rawQuery && !target.query)) { return []; }
 
-        if (target.rawQuery) {
-          getQuery = this.$q.when(target.query);
-        } else {
-          if (target.timeInterval !== 'auto') {
-            getInterval = this.$q.when(target.timeInterval);
-          } else {
-            // Use SELECT count(*) query for calculating required time interval
-            // This is needed because Crate limit response to 10 000 rows.
-            getInterval = this._count_series_query(target, timeFrom, timeTo, options)
-              .then(count => {
-                let min_interval = (timeTo - timeFrom ) / this.CRATE_ROWS_LIMIT;
-                return getMinCrateInterval(min_interval);
-              });
-          }
-          getQuery = getInterval.then(interval => {
-            return this.queryBuilder.build(target, interval)
-          });
+      let query: string;
+      let getQuery: any;
+      let getRawAggQuery: any;
+      let getRawAggInterval: any;
+
+      if (target.rawQuery) {
+        query = target.query;
+      } else {
+        if (target.timeInterval !== 'auto') {
+          getInterval = this.$q.when(target.timeInterval);
+          getRawAggInterval = this.$q.when(1);
         }
-        return getQuery.then(query => {
-          let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
-          if (adhocFilters.length > 0) {
-            timeFilter += " AND " + this.queryBuilder.renderAdhocFilters(adhocFilters);
-          }
-          scopedVars.timeFilter = {value: timeFilter};
-          query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
-          return this._sql_query(query, [timeFrom, timeTo])
-            .then(result => {
-              return handleResponse(target, result);
-            });
-        });
+
+        let minInterval = Math.ceil((timeTo - timeFrom ) / this.CRATE_ROWS_LIMIT);
+        minInterval = minInterval > 1 ? minInterval : null;
+        query = this.queryBuilder.build(target, minInterval);
       }
+
+      let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
+      if (adhocFilters.length > 0) {
+        timeFilter += " AND " + this.queryBuilder.renderAdhocFilters(adhocFilters);
+      }
+      scopedVars.timeFilter = {value: timeFilter};
+      query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
+      return this._sql_query(query, [timeFrom, timeTo])
+        .then(result => {
+          return handleResponse(target, result);
+        });
     });
     return this.$q.all(_.flatten(queries)).then(result => {
       return {

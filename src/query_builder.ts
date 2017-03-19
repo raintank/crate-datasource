@@ -26,22 +26,20 @@ export class CrateQueryBuilder {
    * @param  {string}  groupInterval  Crate interval for date_trunc() function.
    * @return {string}                 SQL query.
    */
-  build(target: any, groupInterval = this.defaultGroupInterval) {
-    let enabledAggs = _.filter(target.metricAggs, (agg) => {
-      return !agg.hide;
+  buildOld(target: any, groupInterval?: any) {
+    let query: string;
+    let enabledAggs = getEnabledAggs(target.metricAggs);
+    let rawAggs = getRawAggs(enabledAggs);
+    let aggs = _.filter(enabledAggs, agg => {
+      return agg.type !== 'raw';
     });
-    let rawAggs = _.filter(enabledAggs, {type: 'raw'});
+
+    if (aggs.length === 0) { return null; }
 
     // SELECT
-    let query: string;
-    if (rawAggs.length) {
-      query = "SELECT " + this.defaultTimeColumn + " as time, " +
-        this.renderMetricAggs(target.metricAggs);
-    } else {
-      query = "SELECT date_trunc('" + groupInterval + "', " +
-        this.defaultTimeColumn + ") as time, " +
-        this.renderMetricAggs(target.metricAggs);
-    }
+    query = "SELECT date_trunc('" + groupInterval + "', " +
+      this.defaultTimeColumn + ") as time, " +
+      this.renderMetricAggs(aggs);
 
     // Add GROUP BY columns to SELECT statement.
     if (target.groupByColumns && target.groupByColumns.length) {
@@ -56,11 +54,66 @@ export class CrateQueryBuilder {
     }
 
     // GROUP BY
-    if (!rawAggs.length) {
-      query += " GROUP BY time";
-      if (target.groupByColumns && target.groupByColumns.length) {
-        query += ", " + target.groupByColumns.join(', ');
+    if (target.groupByColumns && target.groupByColumns.length) {
+      if (groupInterval) {
+        query += " GROUP BY time, ";
+      } else {
+        query += " GROUP BY ";
       }
+      query += target.groupByColumns.join(', ');
+    }
+
+    // If GROUP BY specified, sort also by selected columns
+    query += " ORDER BY time";
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+    query += " ASC";
+
+    return query;
+  }
+
+  build(target: any, groupInterval?: number) {
+    let query: string;
+    let timeExp: string;
+
+    let aggs = getEnabledAggs(target.metricAggs);
+    let rawAggs = getRawAggs(aggs);
+
+    if (!aggs.length) { return null; }
+
+    if (groupInterval) {
+      // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
+      timeExp = `floor(${this.defaultTimeColumn}/${groupInterval})*${groupInterval}`;
+      aggs = aggregateMetrics(aggs, 'avg');
+    } else {
+      timeExp = this.defaultTimeColumn;
+    }
+
+    // SELECT
+    let renderedAggs = this.renderMetricAggs(aggs);
+    query = "SELECT " + timeExp + " as time, " + renderedAggs;
+
+    // Add GROUP BY columns to SELECT statement.
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+    query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
+             "WHERE $timeFilter";
+
+    // WHERE
+    if (target.whereClauses && target.whereClauses.length) {
+      query += " AND " + this.renderWhereClauses(target.whereClauses);
+    }
+
+    // GROUP BY
+    query += " GROUP BY time";
+    if (!groupInterval && rawAggs.length) {
+      query += ", " + this.renderMetricAggs(rawAggs);
+    }
+
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
     }
 
     // If GROUP BY specified, sort also by selected columns
@@ -268,4 +321,26 @@ function quoteColumn(column: string): string {
 
 function isWithUpperCase(str: string): boolean {
   return str.toLowerCase() !== str;
+}
+
+function aggregateMetrics(metricAggs: any, aggType: string) {
+  let aggs = _.cloneDeep(metricAggs);
+  return _.map(aggs, agg => {
+    if (agg.type === 'raw') {
+      agg.type = aggType;
+      return agg;
+    } else {
+      return agg;
+    }
+  });
+}
+
+export function getEnabledAggs(metricAggs) {
+  return _.filter(metricAggs, (agg) => {
+    return !agg.hide;
+  });
+}
+
+export function getRawAggs(metricAggs) {
+  return _.filter(metricAggs, {type: 'raw'});
 }

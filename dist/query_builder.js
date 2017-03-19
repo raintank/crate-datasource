@@ -29,6 +29,28 @@ System.register(['lodash'], function(exports_1) {
     function isWithUpperCase(str) {
         return str.toLowerCase() !== str;
     }
+    function aggregateMetrics(metricAggs, aggType) {
+        var aggs = lodash_1["default"].cloneDeep(metricAggs);
+        return lodash_1["default"].map(aggs, function (agg) {
+            if (agg.type === 'raw') {
+                agg.type = aggType;
+                return agg;
+            }
+            else {
+                return agg;
+            }
+        });
+    }
+    function getEnabledAggs(metricAggs) {
+        return lodash_1["default"].filter(metricAggs, function (agg) {
+            return !agg.hide;
+        });
+    }
+    exports_1("getEnabledAggs", getEnabledAggs);
+    function getRawAggs(metricAggs) {
+        return lodash_1["default"].filter(metricAggs, { type: 'raw' });
+    }
+    exports_1("getRawAggs", getRawAggs);
     return {
         setters:[
             function (lodash_1_1) {
@@ -50,23 +72,20 @@ System.register(['lodash'], function(exports_1) {
                  * @param  {string}  groupInterval  Crate interval for date_trunc() function.
                  * @return {string}                 SQL query.
                  */
-                CrateQueryBuilder.prototype.build = function (target, groupInterval) {
-                    if (groupInterval === void 0) { groupInterval = this.defaultGroupInterval; }
-                    var enabledAggs = lodash_1["default"].filter(target.metricAggs, function (agg) {
-                        return !agg.hide;
-                    });
-                    var rawAggs = lodash_1["default"].filter(enabledAggs, { type: 'raw' });
-                    // SELECT
+                CrateQueryBuilder.prototype.buildOld = function (target, groupInterval) {
                     var query;
-                    if (rawAggs.length) {
-                        query = "SELECT " + this.defaultTimeColumn + " as time, " +
-                            this.renderMetricAggs(target.metricAggs);
+                    var enabledAggs = getEnabledAggs(target.metricAggs);
+                    var rawAggs = getRawAggs(enabledAggs);
+                    var aggs = lodash_1["default"].filter(enabledAggs, function (agg) {
+                        return agg.type !== 'raw';
+                    });
+                    if (aggs.length === 0) {
+                        return null;
                     }
-                    else {
-                        query = "SELECT date_trunc('" + groupInterval + "', " +
-                            this.defaultTimeColumn + ") as time, " +
-                            this.renderMetricAggs(target.metricAggs);
-                    }
+                    // SELECT
+                    query = "SELECT date_trunc('" + groupInterval + "', " +
+                        this.defaultTimeColumn + ") as time, " +
+                        this.renderMetricAggs(aggs);
                     // Add GROUP BY columns to SELECT statement.
                     if (target.groupByColumns && target.groupByColumns.length) {
                         query += ", " + target.groupByColumns.join(', ');
@@ -78,11 +97,59 @@ System.register(['lodash'], function(exports_1) {
                         query += " AND " + this.renderWhereClauses(target.whereClauses);
                     }
                     // GROUP BY
-                    if (!rawAggs.length) {
-                        query += " GROUP BY time";
-                        if (target.groupByColumns && target.groupByColumns.length) {
-                            query += ", " + target.groupByColumns.join(', ');
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        if (groupInterval) {
+                            query += " GROUP BY time, ";
                         }
+                        else {
+                            query += " GROUP BY ";
+                        }
+                        query += target.groupByColumns.join(', ');
+                    }
+                    // If GROUP BY specified, sort also by selected columns
+                    query += " ORDER BY time";
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    query += " ASC";
+                    return query;
+                };
+                CrateQueryBuilder.prototype.build = function (target, groupInterval) {
+                    var query;
+                    var timeExp;
+                    var aggs = getEnabledAggs(target.metricAggs);
+                    var rawAggs = getRawAggs(aggs);
+                    if (!aggs.length) {
+                        return null;
+                    }
+                    if (groupInterval) {
+                        // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
+                        timeExp = "floor(" + this.defaultTimeColumn + "/" + groupInterval + ")*" + groupInterval;
+                        aggs = aggregateMetrics(aggs, 'avg');
+                    }
+                    else {
+                        timeExp = this.defaultTimeColumn;
+                    }
+                    // SELECT
+                    var renderedAggs = this.renderMetricAggs(aggs);
+                    query = "SELECT " + timeExp + " as time, " + renderedAggs;
+                    // Add GROUP BY columns to SELECT statement.
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
+                        "WHERE $timeFilter";
+                    // WHERE
+                    if (target.whereClauses && target.whereClauses.length) {
+                        query += " AND " + this.renderWhereClauses(target.whereClauses);
+                    }
+                    // GROUP BY
+                    query += " GROUP BY time";
+                    if (!groupInterval && rawAggs.length) {
+                        query += ", " + this.renderMetricAggs(rawAggs);
+                    }
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
                     }
                     // If GROUP BY specified, sort also by selected columns
                     query += " ORDER BY time";

@@ -106,41 +106,32 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                         if (target.hide || (target.rawQuery && !target.query)) {
                             return [];
                         }
-                        else {
-                            var getQuery;
-                            if (target.rawQuery) {
-                                getQuery = _this.$q.when(target.query);
-                            }
-                            else {
-                                if (target.timeInterval !== 'auto') {
-                                    getInterval = _this.$q.when(target.timeInterval);
-                                }
-                                else {
-                                    // Use SELECT count(*) query for calculating required time interval
-                                    // This is needed because Crate limit response to 10 000 rows.
-                                    getInterval = _this._count_series_query(target, timeFrom, timeTo, options)
-                                        .then(function (count) {
-                                        var min_interval = (timeTo - timeFrom) / _this.CRATE_ROWS_LIMIT;
-                                        return getMinCrateInterval(min_interval);
-                                    });
-                                }
-                                getQuery = getInterval.then(function (interval) {
-                                    return _this.queryBuilder.build(target, interval);
-                                });
-                            }
-                            return getQuery.then(function (query) {
-                                var adhocFilters = _this.templateSrv.getAdhocFilters(_this.name);
-                                if (adhocFilters.length > 0) {
-                                    timeFilter += " AND " + _this.queryBuilder.renderAdhocFilters(adhocFilters);
-                                }
-                                scopedVars.timeFilter = { value: timeFilter };
-                                query = _this.templateSrv.replace(query, scopedVars, formatCrateValue);
-                                return _this._sql_query(query, [timeFrom, timeTo])
-                                    .then(function (result) {
-                                    return response_handler_1["default"](target, result);
-                                });
-                            });
+                        var query;
+                        var getQuery;
+                        var getRawAggQuery;
+                        var getRawAggInterval;
+                        if (target.rawQuery) {
+                            query = target.query;
                         }
+                        else {
+                            if (target.timeInterval !== 'auto') {
+                                getInterval = _this.$q.when(target.timeInterval);
+                                getRawAggInterval = _this.$q.when(1);
+                            }
+                            var minInterval = Math.ceil((timeTo - timeFrom) / _this.CRATE_ROWS_LIMIT);
+                            minInterval = minInterval > 1 ? minInterval : null;
+                            query = _this.queryBuilder.build(target, minInterval);
+                        }
+                        var adhocFilters = _this.templateSrv.getAdhocFilters(_this.name);
+                        if (adhocFilters.length > 0) {
+                            timeFilter += " AND " + _this.queryBuilder.renderAdhocFilters(adhocFilters);
+                        }
+                        scopedVars.timeFilter = { value: timeFilter };
+                        query = _this.templateSrv.replace(query, scopedVars, formatCrateValue);
+                        return _this._sql_query(query, [timeFrom, timeTo])
+                            .then(function (result) {
+                            return response_handler_1["default"](target, result);
+                        });
                     });
                     return this.$q.all(lodash_1["default"].flatten(queries)).then(function (result) {
                         return {

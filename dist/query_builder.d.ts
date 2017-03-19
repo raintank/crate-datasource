@@ -12,7 +12,8 @@ export declare class CrateQueryBuilder {
      * @param  {string}  groupInterval  Crate interval for date_trunc() function.
      * @return {string}                 SQL query.
      */
-    build(target: any, groupInterval?: string): string;
+    buildOld(target: any, groupInterval?: any): string;
+    build(target: any, groupInterval?: number): string;
     buildCountPointsQuery(target: any): string;
     renderAdhocFilters(filters: any): any;
     /**
@@ -33,3 +34,5 @@ export declare class CrateQueryBuilder {
 }
 export declare function getSchemas(): string;
 export declare function getTables(schema: any): string;
+export declare function getEnabledAggs(metricAggs: any): any;
+export declare function getRawAggs(metricAggs: any): any;

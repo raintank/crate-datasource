@@ -23,57 +23,11 @@ export class CrateQueryBuilder {
   /**
    * Builds Crate SQL query from given target object.
    * @param  {any}     target         Target object.
-   * @param  {string}  groupInterval  Crate interval for date_trunc() function.
+   * @param  {number}  groupInterval  Interval for grouping values.
+   * @param  {string}  defaultAgg     Default aggregation for values.
    * @return {string}                 SQL query.
    */
-  buildOld(target: any, groupInterval?: any) {
-    let query: string;
-    let enabledAggs = getEnabledAggs(target.metricAggs);
-    let rawAggs = getRawAggs(enabledAggs);
-    let aggs = _.filter(enabledAggs, agg => {
-      return agg.type !== 'raw';
-    });
-
-    if (aggs.length === 0) { return null; }
-
-    // SELECT
-    query = "SELECT date_trunc('" + groupInterval + "', " +
-      this.defaultTimeColumn + ") as time, " +
-      this.renderMetricAggs(aggs);
-
-    // Add GROUP BY columns to SELECT statement.
-    if (target.groupByColumns && target.groupByColumns.length) {
-      query += ", " + target.groupByColumns.join(', ');
-    }
-    query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-             "WHERE $timeFilter";
-
-    // WHERE
-    if (target.whereClauses && target.whereClauses.length) {
-      query += " AND " + this.renderWhereClauses(target.whereClauses);
-    }
-
-    // GROUP BY
-    if (target.groupByColumns && target.groupByColumns.length) {
-      if (groupInterval) {
-        query += " GROUP BY time, ";
-      } else {
-        query += " GROUP BY ";
-      }
-      query += target.groupByColumns.join(', ');
-    }
-
-    // If GROUP BY specified, sort also by selected columns
-    query += " ORDER BY time";
-    if (target.groupByColumns && target.groupByColumns.length) {
-      query += ", " + target.groupByColumns.join(', ');
-    }
-    query += " ASC";
-
-    return query;
-  }
-
-  build(target: any, groupInterval?: number) {
+  build(target: any, groupInterval=0, defaultAgg='avg') {
     let query: string;
     let timeExp: string;
 
@@ -122,44 +76,6 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
     query += " ASC";
-
-    return query;
-  }
-
-  // workaround for limit datapoints requested from Crate
-  buildCountPointsQuery(target: any) {
-    let enabledAggs = _.filter(target.metricAggs, (agg) => {
-      return !agg.hide;
-    });
-    let rawAggs = _.filter(enabledAggs, {type: 'raw'});
-
-    // SELECT
-    let query: string;
-    let aggs: string;
-    let renderedAggs = _.map(enabledAggs, (agg) => {
-      return "count" + "(" + agg.column + ")";
-    });
-    if (renderedAggs.length) {
-      aggs = renderedAggs.join(', ');
-    } else {
-      aggs = "";
-    }
-
-    query = `SELECT ${aggs} FROM "${this.schema}"."${this.table}" `;
-    query += `WHERE "${this.defaultTimeColumn}" >= ? AND "${this.defaultTimeColumn}" <= ?`;
-
-    // WHERE
-    if (target.whereClauses && target.whereClauses.length) {
-      query += " AND " + this.renderWhereClauses(target.whereClauses);
-    }
-
-    // GROUP BY
-    if (!rawAggs.length) {
-      if (target.groupByColumns && target.groupByColumns.length) {
-        query += " GROUP BY ";
-        query += target.groupByColumns.join(', ');
-      }
-    }
 
     return query;
   }

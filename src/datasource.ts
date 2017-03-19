@@ -97,21 +97,6 @@ export class CrateDatasource {
     });
   }
 
-  // Workaround for limit datapoints requested from Crate
-  // Count points returned by time series query
-  _count_series_query(target, timeFrom, timeTo, options) {
-    let query = this.queryBuilder.buildCountPointsQuery(target);
-    query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
-    return this._sql_query(query, [timeFrom, timeTo])
-      .then(result => {
-        if (result.rows && result.rows[0]) {
-          return result.rows[0][0];
-        } else {
-          return null;
-        }
-      });
-  }
-
   /**
    * Required.
    * Checks datasource and returns Crate cluster name and version or

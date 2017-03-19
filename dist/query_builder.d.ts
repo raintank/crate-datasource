@@ -9,12 +9,11 @@ export declare class CrateQueryBuilder {
     /**
      * Builds Crate SQL query from given target object.
      * @param  {any}     target         Target object.
-     * @param  {string}  groupInterval  Crate interval for date_trunc() function.
+     * @param  {number}  groupInterval  Interval for grouping values.
+     * @param  {string}  defaultAgg     Default aggregation for values.
      * @return {string}                 SQL query.
      */
-    buildOld(target: any, groupInterval?: any): string;
-    build(target: any, groupInterval?: number): string;
-    buildCountPointsQuery(target: any): string;
+    build(target: any, groupInterval?: number, defaultAgg?: string): string;
     renderAdhocFilters(filters: any): any;
     /**
      * Builds SQL query for getting available columns from table.

@@ -122,10 +122,10 @@ System.register(['lodash'], function(exports_1) {
     }
     function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
         return lodash_1["default"].map(rows, function (row) {
-            return [
-                Number(row[valueColumnIndex]),
-                Number(row[timeColumnIndex]) // timestamp
-            ];
+            var ts = Number(row[timeColumnIndex]);
+            var val = row[valueColumnIndex];
+            val = val !== null ? Number(val) : null;
+            return [val, ts];
         });
     }
     function makeColName(aggType, column) {

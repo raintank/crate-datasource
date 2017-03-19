@@ -129,10 +129,11 @@ function handleBuildedResponse(target, result) {
 
 function convertToGrafanaPoints(rows, timeColumnIndex, valueColumnIndex) {
   return _.map(rows, row => {
-    return [
-      Number(row[valueColumnIndex]), // value
-      Number(row[timeColumnIndex])  // timestamp
-    ];
+    let ts = Number(row[timeColumnIndex]);
+    let val = row[valueColumnIndex];
+    val = val !== null ? Number(val) : null;
+
+    return [val, ts];
   });
 }
 

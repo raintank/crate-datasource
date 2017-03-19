@@ -64,7 +64,7 @@
           property="agg.column"
           get-options="ctrl.getColumns(ctrl.getMetricAggDef(agg.type).allValue, !ctrl.getMetricAggDef(agg.type).anyDataType)"
           on-change="ctrl.onChangeInternal()"
-          css-class="width-12">
+          css-class="width-16">
         </metric-segment-model>
       </div>
 
@@ -113,7 +113,7 @@
           on-change="ctrl.groupBySegmentChanged(segment, $index)">
         </metric-segment>
       </div>
-      <div class="gf-form">
+      <div class="gf-form" ng-if="ctrl.target.groupByColumns.length">
         <label class="gf-form-label query-keyword width-3">AS</label>
         <input type="text" ng-repeat="groupByAlias in ctrl.target.groupByColumns"
           class="gf-form-input max-width-12"
@@ -128,12 +128,18 @@
 
     <div class="gf-form-inline">
       <div class="gf-form">
-        <span class="gf-form-label query-keyword width-13">Group By Time Interval</span>
+        <span class="gf-form-label width-13">Group By time Interval</span>
         <select class="gf-form-input gf-size-auto"
           ng-model="ctrl.target.timeInterval"
           ng-options="f.value as f.name for f in ctrl.timeIntervals"
           ng-change="ctrl.onChangeInternal()">
         </select>
+      </div>
+      <div class="gf-form">
+        <label class="gf-form-label">Format as</label>
+        <div class="gf-form-select-wrapper">
+          <select class="gf-form-input gf-size-auto" ng-model="ctrl.target.resultFormat" ng-options="f.value as f.text for f in ctrl.resultFormats" ng-change="ctrl.refresh()"></select>
+        </div>
       </div>
       <!-- <div class="gf-form">
         <label class="gf-form-label query-keyword width-7">ALIAS BY</label>
@@ -147,14 +153,4 @@
       </div>
     </div>
   </div>
-
-  <div class="gf-form-inline">
-    <div class="gf-form">
-      <label class="gf-form-label">Format as</label>
-      <div class="gf-form-select-wrapper">
-        <select class="gf-form-input gf-size-auto" ng-model="ctrl.target.resultFormat" ng-options="f.value as f.text for f in ctrl.resultFormats" ng-change="ctrl.refresh()"></select>
-      </div>
-    </div>
-  </div>
-
 </query-editor-row>

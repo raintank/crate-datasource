@@ -7,17 +7,17 @@
 
 <div class="gf-form-group">
 	<div class="gf-form-inline">
-		<div class="gf-form max-width-15">
-			<span class="gf-form-label width-7">Schema</span>
-			<input class="gf-form-input" type="text"
+		<div class="gf-form">
+			<span class="gf-form-label width-8">Schema</span>
+			<input class="gf-form-input width-8" type="text"
 				ng-model='ctrl.current.jsonData.schema'
 				placeholder="doc" required>
 			</input>
 		</div>
 
-		<div class="gf-form max-width-19">
+		<div class="gf-form">
 			<span class="gf-form-label width-7">Table</span>
-			<input class="gf-form-input" type="text"
+			<input class="gf-form-input width-12" type="text"
 				ng-model='ctrl.current.jsonData.table'
 				placeholder="stats" required>
 			</input>
@@ -25,9 +25,9 @@
 	</div>
 
 	<div class="gf-form-inline">
-		<div class="gf-form max-width-15">
-			<span class="gf-form-label width-7">Time column</span>
-			<input class="gf-form-input" type="text"
+		<div class="gf-form">
+			<span class="gf-form-label width-8">Time column</span>
+			<input class="gf-form-input width-8" type="text"
 				ng-model='ctrl.current.jsonData.timeColumn'
 				placeholder="timestamp"
 				ng-init="" required>
@@ -36,7 +36,7 @@
 
 		<div class="gf-form">
 			<span class="gf-form-label width-12">Default grouping interval</span>
-			<select class="gf-form-input gf-size-auto"
+			<select class="gf-form-input width-7"
 				ng-model="ctrl.current.jsonData.timeInterval"
 				ng-options="f.value as f.name for f in ctrl.timeIntervals">
 			</select>

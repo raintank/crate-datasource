@@ -61,6 +61,7 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                         groupByAliases: [],
                         whereClauses: [],
                         timeInterval: ds.defaultGroupInterval,
+                        resultFormat: 'time_series',
                         aliasBy: "*"
                     };
                     lodash_1["default"].defaults(this.target, target_defaults);

@@ -59,6 +59,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       groupByAliases: [],
       whereClauses: [],
       timeInterval: ds.defaultGroupInterval,
+      resultFormat: 'time_series',
       aliasBy: "*"
     };
     _.defaults(this.target, target_defaults);

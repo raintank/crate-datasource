@@ -146,7 +146,7 @@ System.register(['lodash'], function(exports_1) {
                     // GROUP BY
                     query += " GROUP BY time";
                     if (!groupInterval && rawAggs.length) {
-                        query += ", " + this.renderMetricAggs(rawAggs);
+                        query += ", " + this.renderMetricAggs(rawAggs, false);
                     }
                     if (target.groupByColumns && target.groupByColumns.length) {
                         query += ", " + target.groupByColumns.join(', ');
@@ -241,13 +241,14 @@ System.register(['lodash'], function(exports_1) {
                     }
                     return query;
                 };
-                CrateQueryBuilder.prototype.renderMetricAggs = function (metricAggs) {
+                CrateQueryBuilder.prototype.renderMetricAggs = function (metricAggs, withAlias) {
+                    if (withAlias === void 0) { withAlias = true; }
                     var enabledAggs = lodash_1["default"].filter(metricAggs, function (agg) {
                         return !agg.hide;
                     });
                     var renderedAggs = lodash_1["default"].map(enabledAggs, function (agg) {
                         var alias = '';
-                        if (agg.alias) {
+                        if (agg.alias && withAlias) {
                             alias = ' AS \"' + agg.alias + '\"';
                         }
                         var column = quoteColumn(agg.column);

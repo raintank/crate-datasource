@@ -28,7 +28,7 @@ export declare class CrateQueryBuilder {
      * @param  {number}  limit   Optional. Limit number returned values.
      */
     getValuesQuery(column: string, limit?: number): string;
-    private renderMetricAggs(metricAggs);
+    private renderMetricAggs(metricAggs, withAlias?);
     private renderWhereClauses(whereClauses);
     private containsVariable(str);
 }

@@ -109,7 +109,7 @@ export class CrateQueryBuilder {
     // GROUP BY
     query += " GROUP BY time";
     if (!groupInterval && rawAggs.length) {
-      query += ", " + this.renderMetricAggs(rawAggs);
+      query += ", " + this.renderMetricAggs(rawAggs, false);
     }
 
     if (target.groupByColumns && target.groupByColumns.length) {
@@ -220,14 +220,14 @@ export class CrateQueryBuilder {
     return query;
   }
 
-  private renderMetricAggs(metricAggs): string {
+  private renderMetricAggs(metricAggs: any, withAlias=true): string {
     let enabledAggs = _.filter(metricAggs, (agg) => {
       return !agg.hide;
     });
 
     let renderedAggs = _.map(enabledAggs, (agg) => {
       let alias = '';
-      if (agg.alias) {
+      if (agg.alias && withAlias) {
         alias = ' AS \"' + agg.alias + '\"';
       }
 

@@ -39,6 +39,7 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                     this.operators = ['<', '>', '<=', '>=', '=', '<>', '!=', 'in', 'like', '~', '!~'];
                     this.timeIntervals = [
                         { name: 'Auto', value: 'auto' },
+                        { name: 'Auto (Grafana)', value: 'auto_gf' },
                         { name: 'Second', value: 'second' },
                         { name: 'Minute', value: 'minute' },
                         { name: 'Hour', value: 'hour' },

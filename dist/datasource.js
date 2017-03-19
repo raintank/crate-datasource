@@ -132,8 +132,15 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                         }
                         else {
                             var minInterval = Math.ceil((timeTo - timeFrom) / _this.CRATE_ROWS_LIMIT);
-                            var interval = minInterval > 1 ? minInterval : null;
-                            if (target.timeInterval !== 'auto') {
+                            var interval;
+                            if (target.timeInterval === 'auto') {
+                                interval = minInterval > 1 ? minInterval : null;
+                            }
+                            else if (target.timeInterval === 'auto_gf') {
+                                // Use intervalMs for panel, provided by Grafana
+                                interval = options.intervalMs;
+                            }
+                            else {
                                 interval = crateToMsInterval(target.timeInterval);
                             }
                             query = _this.queryBuilder.build(target, interval);

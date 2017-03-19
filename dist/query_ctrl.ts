@@ -35,6 +35,7 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
     this.timeIntervals = [
       {name: 'Auto',    value: 'auto'},
+      {name: 'Auto (Grafana)',    value: 'auto_gf'},
       {name: 'Second',  value: 'second'},
       {name: 'Minute',  value: 'minute'},
       {name: 'Hour',    value: 'hour'},

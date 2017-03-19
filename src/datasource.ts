@@ -69,9 +69,14 @@ export class CrateDatasource {
         query = target.query;
       } else {
         let minInterval = Math.ceil((timeTo - timeFrom ) / this.CRATE_ROWS_LIMIT);
-        let interval = minInterval > 1 ? minInterval : null;
+        let interval;
 
-        if (target.timeInterval !== 'auto') {
+        if (target.timeInterval === 'auto') {
+          interval = minInterval > 1 ? minInterval : null;
+        } else if (target.timeInterval === 'auto_gf') {
+          // Use intervalMs for panel, provided by Grafana
+          interval = options.intervalMs;
+        } else {
           interval = crateToMsInterval(target.timeInterval);
         }
 

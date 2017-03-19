@@ -24,8 +24,8 @@
       {"name": "GitHub", "url": "https://github.com/raintank/crate-datasource"},
       {"name": "MIT License", "url": "https://github.com/raintank/crate-datasource/blob/master/LICENSE"}
     ],
-    "version": "0.3.0",
-    "updated": "2017-03-02"
+    "version": "0.4.0",
+    "updated": "2017-03-19"
   },
 
   "dependencies": {

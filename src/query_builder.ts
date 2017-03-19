@@ -92,10 +92,8 @@ export class CrateQueryBuilder {
       aggs = "";
     }
 
-    query = "SELECT count(*) " +
-      "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-      "WHERE " + this.defaultTimeColumn + " >= ? AND " +
-        this.defaultTimeColumn + " <= ?";
+    query = `SELECT ${aggs} FROM "${this.schema}"."${this.table}" `;
+    query += `WHERE "${this.defaultTimeColumn}" >= ? AND "${this.defaultTimeColumn}" <= ?`;
 
     // WHERE
     if (target.whereClauses && target.whereClauses.length) {
@@ -104,8 +102,8 @@ export class CrateQueryBuilder {
 
     // GROUP BY
     if (!rawAggs.length) {
-      query += " GROUP BY ";
       if (target.groupByColumns && target.groupByColumns.length) {
+        query += " GROUP BY ";
         query += target.groupByColumns.join(', ');
       }
     }

@@ -110,18 +110,16 @@ System.register(['lodash'], function(exports_1) {
                     else {
                         aggs = "";
                     }
-                    query = "SELECT count(*) " +
-                        "FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-                        "WHERE " + this.defaultTimeColumn + " >= ? AND " +
-                        this.defaultTimeColumn + " <= ?";
+                    query = "SELECT " + aggs + " FROM \"" + this.schema + "\".\"" + this.table + "\" ";
+                    query += "WHERE \"" + this.defaultTimeColumn + "\" >= ? AND \"" + this.defaultTimeColumn + "\" <= ?";
                     // WHERE
                     if (target.whereClauses && target.whereClauses.length) {
                         query += " AND " + this.renderWhereClauses(target.whereClauses);
                     }
                     // GROUP BY
                     if (!rawAggs.length) {
-                        query += " GROUP BY ";
                         if (target.groupByColumns && target.groupByColumns.length) {
+                            query += " GROUP BY ";
                             query += target.groupByColumns.join(', ');
                         }
                     }

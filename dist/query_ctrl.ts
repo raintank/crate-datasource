@@ -15,7 +15,6 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
   removeWhereSegment: any;
   operators: any;
   timeIntervals: any[];
-  aliasBySegment: any;
   resultFormats: any[];
 
   constructor($scope, $injector, private $q, private uiSegmentSrv, private templateSrv)  {
@@ -59,15 +58,13 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
       groupByAliases: [],
       whereClauses: [],
       timeInterval: ds.defaultGroupInterval,
-      resultFormat: 'time_series',
-      aliasBy: "*"
+      resultFormat: 'time_series'
     };
     _.defaults(this.target, target_defaults);
 
     this.updateGroupByAliases();
 
     this.groupBySegments = _.map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
-    this.aliasBySegment = this.uiSegmentSrv.newSegment(this.target.aliasBy);
 
     // Build WHERE segments
     this.whereSegments = [];
@@ -120,11 +117,6 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
   onGroupByAliasChange(index) {
     this.updateGroupByAliases();
-    this.onChangeInternal();
-  }
-
-  aliasBySegmentChanged(): void {
-    this.target.aliasBy = this.aliasBySegment.value;
     this.onChangeInternal();
   }
 

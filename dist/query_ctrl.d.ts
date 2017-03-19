@@ -12,7 +12,6 @@ export declare class CrateDatasourceQueryCtrl extends QueryCtrl {
     removeWhereSegment: any;
     operators: any;
     timeIntervals: any[];
-    aliasBySegment: any;
     resultFormats: any[];
     constructor($scope: any, $injector: any, $q: any, uiSegmentSrv: any, templateSrv: any);
     crateQuery(query: any, args?: any[]): any;
@@ -20,7 +19,6 @@ export declare class CrateDatasourceQueryCtrl extends QueryCtrl {
     onChangeInternal(): void;
     groupBySegmentChanged(segment: any, index: any): void;
     onGroupByAliasChange(index: any): void;
-    aliasBySegmentChanged(): void;
     onAggTypeChange(): void;
     addMetricAgg(): void;
     removeMetricAgg(index: any): void;

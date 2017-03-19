@@ -61,13 +61,11 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                         groupByAliases: [],
                         whereClauses: [],
                         timeInterval: ds.defaultGroupInterval,
-                        resultFormat: 'time_series',
-                        aliasBy: "*"
+                        resultFormat: 'time_series'
                     };
                     lodash_1["default"].defaults(this.target, target_defaults);
                     this.updateGroupByAliases();
                     this.groupBySegments = lodash_1["default"].map(this.target.groupByColumns, this.uiSegmentSrv.newSegment);
-                    this.aliasBySegment = this.uiSegmentSrv.newSegment(this.target.aliasBy);
                     // Build WHERE segments
                     this.whereSegments = [];
                     this.buildWhereSegments(this.target.whereClauses);
@@ -113,10 +111,6 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                 };
                 CrateDatasourceQueryCtrl.prototype.onGroupByAliasChange = function (index) {
                     this.updateGroupByAliases();
-                    this.onChangeInternal();
-                };
-                CrateDatasourceQueryCtrl.prototype.aliasBySegmentChanged = function () {
-                    this.target.aliasBy = this.aliasBySegment.value;
                     this.onChangeInternal();
                 };
                 CrateDatasourceQueryCtrl.prototype.onAggTypeChange = function () {

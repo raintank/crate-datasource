@@ -2,7 +2,7 @@
 System.register(['lodash'], function(exports_1) {
     var lodash_1;
     function handleResponse(target, result) {
-        if (target.resultFormat == 'table') {
+        if (target.resultFormat === 'table') {
             return handleTableResponse(target, result);
         }
         if (target.rawQuery) {
@@ -14,7 +14,13 @@ System.register(['lodash'], function(exports_1) {
     }
     exports_1("default", handleResponse);
     function handleTableResponse(target, result) {
-        return { columns: result.cols.map(function (e) { return { text: e }; }), rows: result.rows, type: 'table' };
+        return {
+            columns: lodash_1["default"].map(result.cols, function (col) {
+                return { text: col };
+            }),
+            rows: result.rows,
+            type: 'table'
+        };
     }
     function handleRawResponse(target, result) {
         var columns = result.cols;

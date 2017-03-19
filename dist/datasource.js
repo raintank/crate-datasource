@@ -52,8 +52,10 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
             return 'day';
         else if (seconds > 60)
             return 'hour';
+        else if (seconds > 1)
+            return 'second';
         else
-            return 'minute';
+            return 'second';
     }
     return {
         setters:[
@@ -118,7 +120,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                     // This is needed because Crate limit response to 10 000 rows.
                                     getInterval = _this._count_series_query(target, timeFrom, timeTo, options)
                                         .then(function (count) {
-                                        var min_interval = (timeTo - timeFrom) / (_this.CRATE_ROWS_LIMIT / count);
+                                        var min_interval = (timeTo - timeFrom) / _this.CRATE_ROWS_LIMIT;
                                         return getMinCrateInterval(min_interval);
                                     });
                                 }
@@ -153,7 +155,12 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
                     return this._sql_query(query, [timeFrom, timeTo])
                         .then(function (result) {
-                        return result.rowcount;
+                        if (result.rows && result.rows[0]) {
+                            return result.rows[0][0];
+                        }
+                        else {
+                            return null;
+                        }
                     });
                 };
                 /**

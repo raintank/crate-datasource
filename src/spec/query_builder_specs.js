@@ -156,6 +156,7 @@ describe('CrateQueryBuilder', function() {
     });
 
     it('should quote column names with capital letters', function(done) {
+      var queryBuilder = new CrateQueryBuilder('stats', 'nodes', 'tsCamelCase', 'minute', ctx.templateSrv);
       ctx.target = {
         metricAggs: [
           {type: 'sum', column: 'intValue'}
@@ -164,14 +165,14 @@ describe('CrateQueryBuilder', function() {
         groupByColumns: [],
       };
 
-      var expected_query = "SELECT ts as time, " +
+      var expected_query = "SELECT \"tsCamelCase\" as time, " +
                            "sum(\"intValue\") " +
                            "FROM \"stats\".\"nodes\" " +
                            "WHERE $timeFilter " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
 
-      var query = ctx.queryBuilder.build(ctx.target);
+      var query = queryBuilder.build(ctx.target);
       expect(query).to.equal(expected_query);
       done();
     });

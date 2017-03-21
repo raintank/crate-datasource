@@ -73,11 +73,13 @@ System.register(['lodash'], function(exports_1) {
                  * @param  {string}  defaultAgg     Default aggregation for values.
                  * @return {string}                 SQL query.
                  */
-                CrateQueryBuilder.prototype.build = function (target, groupInterval, defaultAgg) {
+                CrateQueryBuilder.prototype.build = function (target, groupInterval, limit, defaultAgg) {
                     if (groupInterval === void 0) { groupInterval = 0; }
+                    if (limit === void 0) { limit = 10000; }
                     if (defaultAgg === void 0) { defaultAgg = 'avg'; }
                     var query;
                     var timeExp;
+                    var timeColumn = quoteColumn(this.defaultTimeColumn);
                     var aggs = getEnabledAggs(target.metricAggs);
                     var rawAggs = getRawAggs(aggs);
                     if (!aggs.length) {
@@ -85,11 +87,11 @@ System.register(['lodash'], function(exports_1) {
                     }
                     if (groupInterval) {
                         // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
-                        timeExp = "floor(" + this.defaultTimeColumn + "/" + groupInterval + ")*" + groupInterval;
+                        timeExp = "floor(" + timeColumn + "/" + groupInterval + ")*" + groupInterval;
                         aggs = aggregateMetrics(aggs, 'avg');
                     }
                     else {
-                        timeExp = this.defaultTimeColumn;
+                        timeExp = timeColumn;
                     }
                     // SELECT
                     var renderedAggs = this.renderMetricAggs(aggs);

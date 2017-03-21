@@ -13,7 +13,7 @@ export declare class CrateQueryBuilder {
      * @param  {string}  defaultAgg     Default aggregation for values.
      * @return {string}                 SQL query.
      */
-    build(target: any, groupInterval?: number, defaultAgg?: string): string;
+    build(target: any, groupInterval?: number, limit?: number, defaultAgg?: string): string;
     renderAdhocFilters(filters: any): any;
     /**
      * Builds SQL query for getting available columns from table.

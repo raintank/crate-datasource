@@ -27,10 +27,11 @@ export class CrateQueryBuilder {
    * @param  {string}  defaultAgg     Default aggregation for values.
    * @return {string}                 SQL query.
    */
-  build(target: any, groupInterval=0, defaultAgg='avg') {
+  build(target: any, groupInterval=0, limit=10000, defaultAgg='avg') {
     let query: string;
     let timeExp: string;
 
+    let timeColumn = quoteColumn(this.defaultTimeColumn);
     let aggs = getEnabledAggs(target.metricAggs);
     let rawAggs = getRawAggs(aggs);
 
@@ -38,10 +39,10 @@ export class CrateQueryBuilder {
 
     if (groupInterval) {
       // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
-      timeExp = `floor(${this.defaultTimeColumn}/${groupInterval})*${groupInterval}`;
+      timeExp = `floor(${timeColumn}/${groupInterval})*${groupInterval}`;
       aggs = aggregateMetrics(aggs, 'avg');
     } else {
-      timeExp = this.defaultTimeColumn;
+      timeExp = timeColumn;
     }
 
     // SELECT

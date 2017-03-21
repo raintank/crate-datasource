@@ -137,7 +137,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                             var maxLimit = timeTo - timeFrom;
                             var interval;
                             if (target.timeInterval === 'auto') {
-                                interval = minInterval > 1 ? minInterval : null;
+                                interval = getMinCrateInterval(options.intervalMs);
                             }
                             else if (target.timeInterval === 'auto_gf') {
                                 // Use intervalMs for panel, provided by Grafana
@@ -147,7 +147,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                 interval = crateToMsInterval(target.timeInterval);
                             }
                             // Split target into two queries (with aggs and raw data)
-                            query = _this.queryBuilder.buildAggQuery(target, interval, adhocFilters);
+                            query = _this.queryBuilder.buildAggQuery(target, interval, adhocFilters, maxLimit);
                             queryTarget = lodash_1["default"].cloneDeep(target);
                             queryTarget.metricAggs = query_builder_1.getNotRawAggs(queryTarget.metricAggs);
                             rawAggQuery = _this.queryBuilder.buildRawAggQuery(target, 0, adhocFilters, maxLimit);

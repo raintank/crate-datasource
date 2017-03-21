@@ -144,6 +144,7 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
     query += " ASC";
+    query += ` LIMIT ${limit}`;
 
     return query;
   }

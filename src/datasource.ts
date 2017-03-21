@@ -75,7 +75,7 @@ export class CrateDatasource {
         let interval;
 
         if (target.timeInterval === 'auto') {
-          interval = minInterval > 1 ? minInterval : null;
+          interval = getMinCrateInterval(options.intervalMs);
         } else if (target.timeInterval === 'auto_gf') {
           // Use intervalMs for panel, provided by Grafana
           interval = options.intervalMs;
@@ -84,7 +84,7 @@ export class CrateDatasource {
         }
 
         // Split target into two queries (with aggs and raw data)
-        query = this.queryBuilder.buildAggQuery(target, interval, adhocFilters);
+        query = this.queryBuilder.buildAggQuery(target, interval, adhocFilters, maxLimit);
         queryTarget = _.cloneDeep(target);
         queryTarget.metricAggs = getNotRawAggs(queryTarget.metricAggs);
 

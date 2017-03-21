@@ -185,6 +185,7 @@ System.register(['lodash'], function(exports_1) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
                     query += " ASC";
+                    query += " LIMIT " + limit;
                     return query;
                 };
                 CrateQueryBuilder.prototype.buildRawAggQuery = function (target, groupInterval, adhocFilters, limit) {

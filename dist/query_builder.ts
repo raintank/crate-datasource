@@ -86,7 +86,7 @@ export class CrateQueryBuilder {
     return query;
   }
 
-  buildAggQuery(target: any, groupInterval=0, adhocFilters=[], limit=10000) {
+  buildAggQuery(target: any, groupInterval=0, adhocFilters=[], limit?: number) {
     let query: string;
     let timeExp: string;
 
@@ -144,7 +144,10 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
     query += " ASC";
-    query += ` LIMIT ${limit}`;
+
+    if (limit) {
+      query += ` LIMIT ${limit}`;
+    }
 
     return query;
   }

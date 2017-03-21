@@ -136,7 +136,6 @@ System.register(['lodash'], function(exports_1) {
                 CrateQueryBuilder.prototype.buildAggQuery = function (target, groupInterval, adhocFilters, limit) {
                     if (groupInterval === void 0) { groupInterval = 0; }
                     if (adhocFilters === void 0) { adhocFilters = []; }
-                    if (limit === void 0) { limit = 10000; }
                     var query;
                     var timeExp;
                     var timeColumn = quoteColumn(this.defaultTimeColumn);
@@ -185,7 +184,9 @@ System.register(['lodash'], function(exports_1) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
                     query += " ASC";
-                    query += " LIMIT " + limit;
+                    if (limit) {
+                        query += " LIMIT " + limit;
+                    }
                     return query;
                 };
                 CrateQueryBuilder.prototype.buildRawAggQuery = function (target, groupInterval, adhocFilters, limit) {

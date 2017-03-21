@@ -30,7 +30,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE ts >= ? AND ts <= ? " +
                              "AND hostname = 'backend01' " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
@@ -51,7 +51,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "load " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE ts >= ? AND ts <= ? " +
                            "GROUP BY time, load " +
                            "ORDER BY time ASC";
 
@@ -68,7 +68,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE ts >= ? AND ts <= ? " +
                              "AND hostname = 'backend01' " +
                              "OR hostname = 'frontend01' " +
                            "GROUP BY time " +
@@ -85,7 +85,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE ts >= ? AND ts <= ? " +
                              "AND id IN ('a', 42) " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
@@ -104,7 +104,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE ts >= ? AND ts <= ? " +
                              "AND id IN ($id) " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
@@ -125,7 +125,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "avg(load), hostname " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE ts >= ? AND ts <= ? " +
                            "GROUP BY time, hostname " +
                            "ORDER BY time, hostname ASC";
 
@@ -146,7 +146,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT ts as time, " +
                            "avg(load[\'1\']) AS \"load\" " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE ts >= ? AND ts <= ? " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
 
@@ -168,7 +168,7 @@ describe('CrateQueryBuilder', function() {
       var expected_query = "SELECT \"tsCamelCase\" as time, " +
                            "sum(\"intValue\") " +
                            "FROM \"stats\".\"nodes\" " +
-                           "WHERE $timeFilter " +
+                           "WHERE \"tsCamelCase\" >= ? AND \"tsCamelCase\" <= ? " +
                            "GROUP BY time " +
                            "ORDER BY time ASC";
 

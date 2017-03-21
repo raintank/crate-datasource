@@ -55,7 +55,6 @@ export class CrateDatasource {
     let timeFrom = Math.ceil(dateMath.parse(options.range.from));
     let timeTo = Math.ceil(dateMath.parse(options.range.to));
     let timeFilter = this.getTimeFilter(timeFrom, timeTo);
-    let scopedVars = options.scopedVars ? _.cloneDeep(options.scopedVars) : {};
 
     let queries = _.map(options.targets, target => {
       if (target.hide || (target.rawQuery && !target.query)) { return []; }
@@ -64,6 +63,7 @@ export class CrateDatasource {
       let getQuery: any;
       let getRawAggQuery: any;
       let getRawAggInterval: any;
+      let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
 
       if (target.rawQuery) {
         query = target.query;
@@ -80,15 +80,10 @@ export class CrateDatasource {
           interval = crateToMsInterval(target.timeInterval);
         }
 
-        query = this.queryBuilder.build(target, interval);
+        query = this.queryBuilder.build(target, interval, adhocFilters);
       }
 
-      let adhocFilters = this.templateSrv.getAdhocFilters(this.name);
-      if (adhocFilters.length > 0) {
-        timeFilter += " AND " + this.queryBuilder.renderAdhocFilters(adhocFilters);
-      }
-      scopedVars.timeFilter = {value: timeFilter};
-      query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
+      query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
       return this._sql_query(query, [timeFrom, timeTo])
         .then(result => {
           return handleResponse(target, result);

@@ -27,7 +27,7 @@ export class CrateQueryBuilder {
    * @param  {string}  defaultAgg     Default aggregation for values.
    * @return {string}                 SQL query.
    */
-  build(target: any, groupInterval=0, limit=10000, defaultAgg='avg') {
+  build(target: any, groupInterval=0, adhocFilters=[], limit=10000, defaultAgg='avg') {
     let query: string;
     let timeExp: string;
 
@@ -53,12 +53,17 @@ export class CrateQueryBuilder {
     if (target.groupByColumns && target.groupByColumns.length) {
       query += ", " + target.groupByColumns.join(', ');
     }
-    query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-             "WHERE $timeFilter";
+    query += ` FROM "${this.schema}"."${this.table}"` +
+             ` WHERE ${timeColumn} >= ? AND ${timeColumn} <= ?`;
 
     // WHERE
     if (target.whereClauses && target.whereClauses.length) {
       query += " AND " + this.renderWhereClauses(target.whereClauses);
+    }
+
+    // Add ad-hoc filters
+    if (adhocFilters.length > 0) {
+      query += " AND " + this.renderAdhocFilters(adhocFilters);
     }
 
     // GROUP BY
@@ -94,7 +99,7 @@ export class CrateQueryBuilder {
         operator = '~';
       }
 
-      return str + '"' + tag.key + '" ' + operator + ' \'' + value.replace(/'/g, "''") + '\'';
+      return str + quoteColumn(tag.key) + operator + ' \'' + value.replace(/'/g, "''") + '\'';
     });
     return conditions.join(' ');
   }
@@ -127,9 +132,10 @@ export class CrateQueryBuilder {
    * @param  {number}  limit   Optional. Limit number returned values.
    */
   getValuesQuery(column: string, limit?: number) {
+    let timeColumn = quoteColumn(this.defaultTimeColumn);
     let query = `SELECT DISTINCT ${column} ` +
                 `FROM "${this.schema}"."${this.table}" ` +
-                `WHERE ${this.defaultTimeColumn} >= ? AND ${this.defaultTimeColumn} <= ?`;
+                `WHERE ${timeColumn} >= ? AND ${timeColumn} <= ?`;
 
     if (limit) {
       query += " LIMIT " + limit;

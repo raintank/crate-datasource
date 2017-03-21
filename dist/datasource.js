@@ -118,7 +118,6 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     var timeFrom = Math.ceil(dateMath.parse(options.range.from));
                     var timeTo = Math.ceil(dateMath.parse(options.range.to));
                     var timeFilter = this.getTimeFilter(timeFrom, timeTo);
-                    var scopedVars = options.scopedVars ? lodash_1["default"].cloneDeep(options.scopedVars) : {};
                     var queries = lodash_1["default"].map(options.targets, function (target) {
                         if (target.hide || (target.rawQuery && !target.query)) {
                             return [];
@@ -127,6 +126,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                         var getQuery;
                         var getRawAggQuery;
                         var getRawAggInterval;
+                        var adhocFilters = _this.templateSrv.getAdhocFilters(_this.name);
                         if (target.rawQuery) {
                             query = target.query;
                         }
@@ -143,14 +143,9 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                             else {
                                 interval = crateToMsInterval(target.timeInterval);
                             }
-                            query = _this.queryBuilder.build(target, interval);
+                            query = _this.queryBuilder.build(target, interval, adhocFilters);
                         }
-                        var adhocFilters = _this.templateSrv.getAdhocFilters(_this.name);
-                        if (adhocFilters.length > 0) {
-                            timeFilter += " AND " + _this.queryBuilder.renderAdhocFilters(adhocFilters);
-                        }
-                        scopedVars.timeFilter = { value: timeFilter };
-                        query = _this.templateSrv.replace(query, scopedVars, formatCrateValue);
+                        query = _this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
                         return _this._sql_query(query, [timeFrom, timeTo])
                             .then(function (result) {
                             return response_handler_1["default"](target, result);

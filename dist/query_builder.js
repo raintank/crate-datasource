@@ -73,8 +73,9 @@ System.register(['lodash'], function(exports_1) {
                  * @param  {string}  defaultAgg     Default aggregation for values.
                  * @return {string}                 SQL query.
                  */
-                CrateQueryBuilder.prototype.build = function (target, groupInterval, limit, defaultAgg) {
+                CrateQueryBuilder.prototype.build = function (target, groupInterval, adhocFilters, limit, defaultAgg) {
                     if (groupInterval === void 0) { groupInterval = 0; }
+                    if (adhocFilters === void 0) { adhocFilters = []; }
                     if (limit === void 0) { limit = 10000; }
                     if (defaultAgg === void 0) { defaultAgg = 'avg'; }
                     var query;
@@ -100,11 +101,15 @@ System.register(['lodash'], function(exports_1) {
                     if (target.groupByColumns && target.groupByColumns.length) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
-                    query += " FROM \"" + this.schema + "\".\"" + this.table + "\" " +
-                        "WHERE $timeFilter";
+                    query += (" FROM \"" + this.schema + "\".\"" + this.table + "\"") +
+                        (" WHERE " + timeColumn + " >= ? AND " + timeColumn + " <= ?");
                     // WHERE
                     if (target.whereClauses && target.whereClauses.length) {
                         query += " AND " + this.renderWhereClauses(target.whereClauses);
+                    }
+                    // Add ad-hoc filters
+                    if (adhocFilters.length > 0) {
+                        query += " AND " + this.renderAdhocFilters(adhocFilters);
                     }
                     // GROUP BY
                     query += " GROUP BY time";
@@ -133,7 +138,7 @@ System.register(['lodash'], function(exports_1) {
                         if (operator === '=~') {
                             operator = '~';
                         }
-                        return str + '"' + tag.key + '" ' + operator + ' \'' + value.replace(/'/g, "''") + '\'';
+                        return str + quoteColumn(tag.key) + operator + ' \'' + value.replace(/'/g, "''") + '\'';
                     });
                     return conditions.join(' ');
                 };
@@ -163,9 +168,10 @@ System.register(['lodash'], function(exports_1) {
                  * @param  {number}  limit   Optional. Limit number returned values.
                  */
                 CrateQueryBuilder.prototype.getValuesQuery = function (column, limit) {
+                    var timeColumn = quoteColumn(this.defaultTimeColumn);
                     var query = ("SELECT DISTINCT " + column + " ") +
                         ("FROM \"" + this.schema + "\".\"" + this.table + "\" ") +
-                        ("WHERE " + this.defaultTimeColumn + " >= ? AND " + this.defaultTimeColumn + " <= ?");
+                        ("WHERE " + timeColumn + " >= ? AND " + timeColumn + " <= ?");
                     if (limit) {
                         query += " LIMIT " + limit;
                     }

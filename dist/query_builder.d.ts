@@ -14,6 +14,8 @@ export declare class CrateQueryBuilder {
      * @return {string}                 SQL query.
      */
     build(target: any, groupInterval?: number, adhocFilters?: any[], limit?: number, defaultAgg?: string): string;
+    buildAggQuery(target: any, groupInterval?: number, adhocFilters?: any[], limit?: number): string;
+    buildRawAggQuery(target: any, groupInterval?: number, adhocFilters?: any[], limit?: number): string;
     renderAdhocFilters(filters: any): any;
     /**
      * Builds SQL query for getting available columns from table.
@@ -35,3 +37,4 @@ export declare function getSchemas(): string;
 export declare function getTables(schema: any): string;
 export declare function getEnabledAggs(metricAggs: any): any;
 export declare function getRawAggs(metricAggs: any): any;
+export declare function getNotRawAggs(metricAggs: any): any;

@@ -51,6 +51,12 @@ System.register(['lodash'], function(exports_1) {
         return lodash_1["default"].filter(metricAggs, { type: 'raw' });
     }
     exports_1("getRawAggs", getRawAggs);
+    function getNotRawAggs(metricAggs) {
+        return lodash_1["default"].filter(metricAggs, function (agg) {
+            return agg.type !== 'raw';
+        });
+    }
+    exports_1("getNotRawAggs", getNotRawAggs);
     return {
         setters:[
             function (lodash_1_1) {
@@ -125,6 +131,104 @@ System.register(['lodash'], function(exports_1) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
                     query += " ASC";
+                    return query;
+                };
+                CrateQueryBuilder.prototype.buildAggQuery = function (target, groupInterval, adhocFilters, limit) {
+                    if (groupInterval === void 0) { groupInterval = 0; }
+                    if (adhocFilters === void 0) { adhocFilters = []; }
+                    if (limit === void 0) { limit = 10000; }
+                    var query;
+                    var timeExp;
+                    var timeColumn = quoteColumn(this.defaultTimeColumn);
+                    var aggs = getEnabledAggs(target.metricAggs);
+                    aggs = getNotRawAggs(aggs);
+                    if (!aggs.length) {
+                        return null;
+                    }
+                    if (!groupInterval) {
+                        groupInterval = 1;
+                    }
+                    if (typeof groupInterval === 'number') {
+                        // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
+                        timeExp = "floor(" + timeColumn + "/" + groupInterval + ")*" + groupInterval;
+                    }
+                    else {
+                        // Use built-in date_trunc() function
+                        timeExp = "date_trunc('" + groupInterval + "', " + timeColumn + ")";
+                    }
+                    // SELECT
+                    var renderedAggs = this.renderMetricAggs(aggs);
+                    query = "SELECT " + timeExp + " as time, " + renderedAggs;
+                    // Add GROUP BY columns to SELECT statement.
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    // FROM
+                    query += " FROM \"" + this.schema + "\".\"" + this.table + "\"";
+                    // WHERE
+                    query += " WHERE " + timeColumn + " >= ? AND " + timeColumn + " <= ?";
+                    if (target.whereClauses && target.whereClauses.length) {
+                        query += " AND " + this.renderWhereClauses(target.whereClauses);
+                    }
+                    // Add ad-hoc filters
+                    if (adhocFilters.length > 0) {
+                        query += " AND " + this.renderAdhocFilters(adhocFilters);
+                    }
+                    // GROUP BY
+                    query += " GROUP BY time";
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    // If GROUP BY specified, sort also by selected columns
+                    query += " ORDER BY time";
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    query += " ASC";
+                    return query;
+                };
+                CrateQueryBuilder.prototype.buildRawAggQuery = function (target, groupInterval, adhocFilters, limit) {
+                    if (groupInterval === void 0) { groupInterval = 0; }
+                    if (adhocFilters === void 0) { adhocFilters = []; }
+                    if (limit === void 0) { limit = 10000; }
+                    var query;
+                    var timeExp;
+                    var timeColumn = quoteColumn(this.defaultTimeColumn);
+                    var aggs = getEnabledAggs(target.metricAggs);
+                    var rawAggs = getRawAggs(aggs);
+                    if (!rawAggs.length) {
+                        return null;
+                    }
+                    // SELECT
+                    var renderedAggs = this.renderMetricAggs(rawAggs);
+                    query = "SELECT " + timeColumn + " as time, " + renderedAggs;
+                    // Add GROUP BY columns to SELECT statement.
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    query += (" FROM \"" + this.schema + "\".\"" + this.table + "\"") +
+                        (" WHERE " + timeColumn + " >= ? AND " + timeColumn + " <= ?");
+                    // WHERE
+                    if (target.whereClauses && target.whereClauses.length) {
+                        query += " AND " + this.renderWhereClauses(target.whereClauses);
+                    }
+                    // Add ad-hoc filters
+                    if (adhocFilters.length > 0) {
+                        query += " AND " + this.renderAdhocFilters(adhocFilters);
+                    }
+                    // GROUP BY
+                    query += " GROUP BY time";
+                    query += ", " + this.renderMetricAggs(rawAggs, false);
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    // If GROUP BY specified, sort also by selected columns
+                    query += " ORDER BY time";
+                    if (target.groupByColumns && target.groupByColumns.length) {
+                        query += ", " + target.groupByColumns.join(', ');
+                    }
+                    query += " ASC";
+                    query += " LIMIT " + limit;
                     return query;
                 };
                 CrateQueryBuilder.prototype.renderAdhocFilters = function (filters) {

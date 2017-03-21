@@ -123,6 +123,8 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                             return [];
                         }
                         var query;
+                        var rawAggQuery;
+                        var queryTarget, rawAggTarget;
                         var getQuery;
                         var getRawAggQuery;
                         var getRawAggInterval;
@@ -132,6 +134,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                         }
                         else {
                             var minInterval = Math.ceil((timeTo - timeFrom) / _this.CRATE_ROWS_LIMIT);
+                            var maxLimit = timeTo - timeFrom;
                             var interval;
                             if (target.timeInterval === 'auto') {
                                 interval = minInterval > 1 ? minInterval : null;
@@ -143,15 +146,36 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                             else {
                                 interval = crateToMsInterval(target.timeInterval);
                             }
-                            query = _this.queryBuilder.build(target, interval, adhocFilters);
+                            // Split target into two queries (with aggs and raw data)
+                            query = _this.queryBuilder.buildAggQuery(target, interval, adhocFilters);
+                            queryTarget = lodash_1["default"].cloneDeep(target);
+                            queryTarget.metricAggs = query_builder_1.getNotRawAggs(queryTarget.metricAggs);
+                            rawAggQuery = _this.queryBuilder.buildRawAggQuery(target, 0, adhocFilters, maxLimit);
+                            rawAggQuery = _this.templateSrv.replace(rawAggQuery, options.scopedVars, formatCrateValue);
+                            rawAggTarget = lodash_1["default"].cloneDeep(target);
+                            rawAggTarget.metricAggs = query_builder_1.getRawAggs(rawAggTarget.metricAggs);
                         }
                         query = _this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
-                        return _this._sql_query(query, [timeFrom, timeTo])
-                            .then(function (result) {
-                            return response_handler_1["default"](target, result);
+                        var queries = [
+                            { query: query, target: queryTarget },
+                            { query: rawAggQuery, target: rawAggTarget }
+                        ];
+                        queries = lodash_1["default"].filter(queries, function (q) {
+                            return q.query;
+                        });
+                        return lodash_1["default"].map(queries, function (q) {
+                            return _this._sql_query(q.query, [timeFrom, timeTo])
+                                .then(function (result) {
+                                if (q.target) {
+                                    return response_handler_1["default"](q.target, result);
+                                }
+                                else {
+                                    return response_handler_1["default"](target, result);
+                                }
+                            });
                         });
                     });
-                    return this.$q.all(lodash_1["default"].flatten(queries)).then(function (result) {
+                    return this.$q.all(lodash_1["default"].flattenDepth(queries, 2)).then(function (result) {
                         return {
                             data: lodash_1["default"].flatten(result)
                         };

@@ -86,6 +86,119 @@ export class CrateQueryBuilder {
     return query;
   }
 
+  buildAggQuery(target: any, groupInterval=0, adhocFilters=[], limit=10000) {
+    let query: string;
+    let timeExp: string;
+
+    let timeColumn = quoteColumn(this.defaultTimeColumn);
+    let aggs = getEnabledAggs(target.metricAggs);
+    aggs = getNotRawAggs(aggs);
+
+    if (!aggs.length) { return null; }
+
+    if (!groupInterval) {
+      groupInterval = 1;
+    }
+
+    if (typeof groupInterval === 'number') {
+      // Manually aggregate by time interval, ie "SELECT floor(ts/10)*10 as time ..."
+      timeExp = `floor(${timeColumn}/${groupInterval})*${groupInterval}`;
+    } else {
+      // Use built-in date_trunc() function
+      timeExp = `date_trunc('${groupInterval}', ${timeColumn})`;
+    }
+
+    // SELECT
+    let renderedAggs = this.renderMetricAggs(aggs);
+    query = `SELECT ${timeExp} as time, ${renderedAggs}`;
+
+    // Add GROUP BY columns to SELECT statement.
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+
+    // FROM
+    query += ` FROM "${this.schema}"."${this.table}"`;
+
+    // WHERE
+    query += ` WHERE ${timeColumn} >= ? AND ${timeColumn} <= ?`;
+    if (target.whereClauses && target.whereClauses.length) {
+      query += " AND " + this.renderWhereClauses(target.whereClauses);
+    }
+
+    // Add ad-hoc filters
+    if (adhocFilters.length > 0) {
+      query += " AND " + this.renderAdhocFilters(adhocFilters);
+    }
+
+    // GROUP BY
+    query += " GROUP BY time";
+
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+
+    // If GROUP BY specified, sort also by selected columns
+    query += " ORDER BY time";
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+    query += " ASC";
+    query += ` LIMIT ${limit}`;
+
+    return query;
+  }
+
+  buildRawAggQuery(target: any, groupInterval=0, adhocFilters=[], limit=10000) {
+    let query: string;
+    let timeExp: string;
+
+    let timeColumn = quoteColumn(this.defaultTimeColumn);
+    let aggs = getEnabledAggs(target.metricAggs);
+    let rawAggs = getRawAggs(aggs);
+
+    if (!rawAggs.length) { return null; }
+
+    // SELECT
+    let renderedAggs = this.renderMetricAggs(rawAggs);
+    query = "SELECT " + timeColumn + " as time, " + renderedAggs;
+
+    // Add GROUP BY columns to SELECT statement.
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+    query += ` FROM "${this.schema}"."${this.table}"` +
+             ` WHERE ${timeColumn} >= ? AND ${timeColumn} <= ?`;
+
+    // WHERE
+    if (target.whereClauses && target.whereClauses.length) {
+      query += " AND " + this.renderWhereClauses(target.whereClauses);
+    }
+
+    // Add ad-hoc filters
+    if (adhocFilters.length > 0) {
+      query += " AND " + this.renderAdhocFilters(adhocFilters);
+    }
+
+    // GROUP BY
+    query += " GROUP BY time";
+    query += ", " + this.renderMetricAggs(rawAggs, false);
+
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+
+    // If GROUP BY specified, sort also by selected columns
+    query += " ORDER BY time";
+    if (target.groupByColumns && target.groupByColumns.length) {
+      query += ", " + target.groupByColumns.join(', ');
+    }
+    query += " ASC";
+    query += ` LIMIT ${limit}`;
+
+    return query;
+  }
+
   renderAdhocFilters(filters) {
     let conditions = _.map(filters, (tag, index) => {
       let str = "";
@@ -271,4 +384,10 @@ export function getEnabledAggs(metricAggs) {
 
 export function getRawAggs(metricAggs) {
   return _.filter(metricAggs, {type: 'raw'});
+}
+
+export function getNotRawAggs(metricAggs) {
+  return _.filter(metricAggs, agg => {
+    return agg.type !== 'raw';
+  });
 }

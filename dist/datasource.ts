@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import * as dateMath from 'app/core/utils/datemath';
 import moment from 'moment';
-import {CrateQueryBuilder, getEnabledAggs, getRawAggs} from './query_builder';
+import {CrateQueryBuilder, getEnabledAggs, getRawAggs, getNotRawAggs} from './query_builder';
 import handleResponse from './response_handler';
 
 export class CrateDatasource {
@@ -60,6 +60,8 @@ export class CrateDatasource {
       if (target.hide || (target.rawQuery && !target.query)) { return []; }
 
       let query: string;
+      let rawAggQuery: string;
+      let queryTarget, rawAggTarget;
       let getQuery: any;
       let getRawAggQuery: any;
       let getRawAggInterval: any;
@@ -68,11 +70,12 @@ export class CrateDatasource {
       if (target.rawQuery) {
         query = target.query;
       } else {
-        let minInterval = Math.ceil((timeTo - timeFrom ) / this.CRATE_ROWS_LIMIT);
+        let minInterval = Math.ceil((timeTo - timeFrom) / this.CRATE_ROWS_LIMIT);
+        let maxLimit = timeTo - timeFrom;
         let interval;
 
         if (target.timeInterval === 'auto') {
-          interval = minInterval > 1 ? minInterval : null;
+          interval = getMinCrateInterval(options.intervalMs);
         } else if (target.timeInterval === 'auto_gf') {
           // Use intervalMs for panel, provided by Grafana
           interval = options.intervalMs;
@@ -80,16 +83,39 @@ export class CrateDatasource {
           interval = crateToMsInterval(target.timeInterval);
         }
 
-        query = this.queryBuilder.build(target, interval, adhocFilters);
+        // Split target into two queries (with aggs and raw data)
+        query = this.queryBuilder.buildAggQuery(target, interval, adhocFilters, maxLimit);
+        queryTarget = _.cloneDeep(target);
+        queryTarget.metricAggs = getNotRawAggs(queryTarget.metricAggs);
+
+        rawAggQuery = this.queryBuilder.buildRawAggQuery(target, 0, adhocFilters, maxLimit);
+        rawAggQuery = this.templateSrv.replace(rawAggQuery, options.scopedVars, formatCrateValue);
+        rawAggTarget = _.cloneDeep(target);
+        rawAggTarget.metricAggs = getRawAggs(rawAggTarget.metricAggs);
       }
 
       query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
-      return this._sql_query(query, [timeFrom, timeTo])
-        .then(result => {
-          return handleResponse(target, result);
-        });
+
+      let queries = [
+        {query: query, target: queryTarget},
+        {query: rawAggQuery, target: rawAggTarget}
+      ];
+      queries = _.filter(queries, q => {
+        return q.query;
+      });
+
+      return _.map(queries, q => {
+        return this._sql_query(q.query, [timeFrom, timeTo])
+          .then(result => {
+            if (q.target) {
+              return handleResponse(q.target, result);
+            } else {
+              return handleResponse(target, result);
+            }
+          });
+      })
     });
-    return this.$q.all(_.flatten(queries)).then(result => {
+    return this.$q.all(_.flattenDepth(queries, 2)).then(result => {
       return {
         data: _.flatten(result)
       };

@@ -157,17 +157,8 @@ export class CrateDatasource {
 
   getTagValues(options) {
     let range = this.timeSrv.timeRange();
-    let timeFrom = this.getCrateTime(range.from);
-    let timeTo = this.getCrateTime(range.to);
-    let timeFilter = this.getTimeFilter(timeFrom, timeTo);
-    let scopedVars = {timeFilter: {value: timeFilter}};
-    let query = this.queryBuilder.getValuesQuery(options.key, this.CRATE_ROWS_LIMIT);
-    query = this.templateSrv.replace(query, scopedVars);
+    let query = this.queryBuilder.getValuesQuery(options.key, this.CRATE_ROWS_LIMIT, range);
     return this.metricFindQuery(query);
-  }
-
-  getCrateTime(date) {
-    return date.valueOf();
   }
 
   /**

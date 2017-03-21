@@ -28,7 +28,6 @@ export declare class CrateDatasource {
     getTimeFilter(timeFrom: any, timeTo: any): string;
     getTagKeys(options: any): any;
     getTagValues(options: any): any;
-    getCrateTime(date: any): any;
     /**
      * Sends SQL query to Crate and returns result.
      * @param {string} query SQL query string

@@ -131,14 +131,19 @@ export class CrateQueryBuilder {
    * @param  {string}  column  Column name
    * @param  {number}  limit   Optional. Limit number returned values.
    */
-  getValuesQuery(column: string, limit?: number) {
+  getValuesQuery(column: string, limit?: number, timeRange?) {
     let timeColumn = quoteColumn(this.defaultTimeColumn);
     let query = `SELECT DISTINCT ${column} ` +
-                `FROM "${this.schema}"."${this.table}" ` +
-                `WHERE ${timeColumn} >= ? AND ${timeColumn} <= ?`;
+                `FROM "${this.schema}"."${this.table}"`;
+
+    if (timeRange) {
+      let timeFrom = timeRange.from.valueOf();
+      let timeTo = timeRange.to.valueOf();
+      query += ` WHERE ${timeColumn} >= ${timeFrom} AND ${timeColumn} <= ${timeTo}`;
+    }
 
     if (limit) {
-      query += " LIMIT " + limit;
+      query += ` LIMIT ${limit}`;
     }
     return query;
   }

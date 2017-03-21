@@ -160,8 +160,8 @@ System.register(['angular', 'lodash', './sdk/sdk', './query_builder', './query_d
                 CrateDatasourceQueryCtrl.prototype.getValues = function (column, limit) {
                     if (limit === void 0) { limit = 10; }
                     var self = this;
-                    var time_range = [this.panelCtrl.range.from.valueOf(), this.panelCtrl.range.to.valueOf()];
-                    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit), time_range)
+                    var time_range = this.panelCtrl.range;
+                    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit, time_range))
                         .then(function (rows) {
                         return self.transformToSegments(lodash_1["default"].flatten(rows), true);
                     });

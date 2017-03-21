@@ -215,16 +215,8 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                 };
                 CrateDatasource.prototype.getTagValues = function (options) {
                     var range = this.timeSrv.timeRange();
-                    var timeFrom = this.getCrateTime(range.from);
-                    var timeTo = this.getCrateTime(range.to);
-                    var timeFilter = this.getTimeFilter(timeFrom, timeTo);
-                    var scopedVars = { timeFilter: { value: timeFilter } };
-                    var query = this.queryBuilder.getValuesQuery(options.key, this.CRATE_ROWS_LIMIT);
-                    query = this.templateSrv.replace(query, scopedVars);
+                    var query = this.queryBuilder.getValuesQuery(options.key, this.CRATE_ROWS_LIMIT, range);
                     return this.metricFindQuery(query);
-                };
-                CrateDatasource.prototype.getCrateTime = function (date) {
-                    return date.valueOf();
                 };
                 /**
                  * Sends SQL query to Crate and returns result.

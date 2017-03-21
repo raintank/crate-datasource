@@ -172,8 +172,8 @@ export class CrateDatasourceQueryCtrl extends QueryCtrl {
 
   getValues(column, limit = 10) {
     let self = this;
-    let time_range = [this.panelCtrl.range.from.valueOf(), this.panelCtrl.range.to.valueOf()];
-    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit), time_range)
+    let time_range = this.panelCtrl.range;
+    return this.crateQuery(this.crateQueryBuilder.getValuesQuery(column, limit, time_range))
       .then(rows => {
         return self.transformToSegments(_.flatten(rows), true);
       });

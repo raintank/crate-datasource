@@ -196,17 +196,27 @@ describe('CrateQueryBuilder', function() {
 
     it('should build proper Crate SQL query', function(done) {
       var expected_query = "SELECT DISTINCT load " +
-                           "FROM \"stats\".\"nodes\" " +
-                           "WHERE ts >= ? AND ts <= ?";
+                           "FROM \"stats\".\"nodes\"";
       var query = ctx.queryBuilder.getValuesQuery('load');
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
+    it('should add time range to query if it passed', function(done) {
+      var expected_query = "SELECT DISTINCT load " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE ts >= 123 AND ts <= 456 " +
+                           "LIMIT 10";
+
+      var timeRange = {from: 123, to: 456};
+      var query = ctx.queryBuilder.getValuesQuery('load', 10, timeRange);
       expect(query).to.equal(expected_query);
       done();
     });
 
     it('should add limit to query if it passed', function(done) {
       var expected_query = "SELECT DISTINCT load " +
-                           "FROM \"stats\".\"nodes\" WHERE ts >= ? AND ts <= ? " +
-                           "LIMIT 10";
+                           "FROM \"stats\".\"nodes\" LIMIT 10";
       var query = ctx.queryBuilder.getValuesQuery('load', 10);
       expect(query).to.equal(expected_query);
       done();

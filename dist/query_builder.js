@@ -167,11 +167,15 @@ System.register(['lodash'], function(exports_1) {
                  * @param  {string}  column  Column name
                  * @param  {number}  limit   Optional. Limit number returned values.
                  */
-                CrateQueryBuilder.prototype.getValuesQuery = function (column, limit) {
+                CrateQueryBuilder.prototype.getValuesQuery = function (column, limit, timeRange) {
                     var timeColumn = quoteColumn(this.defaultTimeColumn);
                     var query = ("SELECT DISTINCT " + column + " ") +
-                        ("FROM \"" + this.schema + "\".\"" + this.table + "\" ") +
-                        ("WHERE " + timeColumn + " >= ? AND " + timeColumn + " <= ?");
+                        ("FROM \"" + this.schema + "\".\"" + this.table + "\"");
+                    if (timeRange) {
+                        var timeFrom = timeRange.from.valueOf();
+                        var timeTo = timeRange.to.valueOf();
+                        query += " WHERE " + timeColumn + " >= " + timeFrom + " AND " + timeColumn + " <= " + timeTo;
+                    }
                     if (limit) {
                         query += " LIMIT " + limit;
                     }

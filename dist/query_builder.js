@@ -26,6 +26,22 @@ System.register(['lodash'], function(exports_1) {
             return column;
         }
     }
+    function quoteValue(value) {
+        value = value.trim();
+        var match = value.match(/^'?([^']*)'?$/);
+        if (match[1]) {
+            value = match[1];
+        }
+        else {
+            return value;
+        }
+        if (!isNaN(Number(value))) {
+            return value;
+        }
+        else {
+            return "'" + value + "'";
+        }
+    }
     function isWithUpperCase(str) {
         return str.toLowerCase() !== str;
     }
@@ -192,7 +208,6 @@ System.register(['lodash'], function(exports_1) {
                 CrateQueryBuilder.prototype.buildRawAggQuery = function (target, groupInterval, adhocFilters, limit) {
                     if (groupInterval === void 0) { groupInterval = 0; }
                     if (adhocFilters === void 0) { adhocFilters = []; }
-                    if (limit === void 0) { limit = 10000; }
                     var query;
                     var timeExp;
                     var timeColumn = quoteColumn(this.defaultTimeColumn);
@@ -230,21 +245,26 @@ System.register(['lodash'], function(exports_1) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
                     query += " ASC";
-                    query += " LIMIT " + limit;
+                    if (limit) {
+                        query += " LIMIT " + limit;
+                    }
                     return query;
                 };
                 CrateQueryBuilder.prototype.renderAdhocFilters = function (filters) {
                     var conditions = lodash_1["default"].map(filters, function (tag, index) {
-                        var str = "";
+                        var filter_str = "";
+                        var condition = tag.condition || 'AND';
+                        var key = quoteColumn(tag.key);
                         var operator = tag.operator;
-                        var value = tag.value;
+                        var value = quoteValue(tag.value);
                         if (index > 0) {
-                            str = (tag.condition || 'AND') + ' ';
+                            filter_str = condition + " ";
                         }
                         if (operator === '=~') {
                             operator = '~';
                         }
-                        return str + quoteColumn(tag.key) + operator + ' \'' + value.replace(/'/g, "''") + '\'';
+                        filter_str += key + " " + operator + " " + value;
+                        return filter_str;
                     });
                     return conditions.join(' ');
                 };

@@ -152,7 +152,7 @@ export class CrateQueryBuilder {
     return query;
   }
 
-  buildRawAggQuery(target: any, groupInterval=0, adhocFilters=[], limit=10000) {
+  buildRawAggQuery(target: any, groupInterval=0, adhocFilters=[], limit?: number) {
     let query: string;
     let timeExp: string;
 
@@ -197,25 +197,32 @@ export class CrateQueryBuilder {
       query += ", " + target.groupByColumns.join(', ');
     }
     query += " ASC";
-    query += ` LIMIT ${limit}`;
+
+    if (limit) {
+      query += ` LIMIT ${limit}`;
+    }
 
     return query;
   }
 
   renderAdhocFilters(filters) {
     let conditions = _.map(filters, (tag, index) => {
-      let str = "";
+      let filter_str = "";
+      let condition = tag.condition || 'AND';
+      let key = quoteColumn(tag.key);
       let operator = tag.operator;
-      let value = tag.value;
+      let value = quoteValue(tag.value);
+
       if (index > 0) {
-        str = (tag.condition || 'AND') + ' ';
+        filter_str = `${condition} `;
       }
 
       if (operator === '=~') {
         operator = '~';
       }
 
-      return str + quoteColumn(tag.key) + operator + ' \'' + value.replace(/'/g, "''") + '\'';
+      filter_str += `${key} ${operator} ${value}`
+      return filter_str;
     });
     return conditions.join(' ');
   }
@@ -360,6 +367,22 @@ function quoteColumn(column: string): string {
     return '\"' + column + '\"';
   } else {
     return column;
+  }
+}
+
+function quoteValue(value: string): string {
+  value = value.trim();
+  let match = value.match(/^'?([^']*)'?$/);
+  if (match[1]) {
+    value = match[1];
+  } else {
+    return value;
+  }
+
+  if (!isNaN(Number(value))) {
+    return value;
+  } else {
+    return "'" + value + "'";
   }
 }
 

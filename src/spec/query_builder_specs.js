@@ -14,7 +14,7 @@ describe('CrateQueryBuilder', function() {
     ctx.queryBuilder = new CrateQueryBuilder('stats', 'nodes', 'ts', 'minute', ctx.templateSrv);
   });
 
-  describe('When building query with aggregations', function() {
+  describe('When building query', function() {
 
     beforeEach(function() {
       ctx.target = {
@@ -50,6 +50,7 @@ describe('CrateQueryBuilder', function() {
         {condition: 'AND', column: 'hostname', operator: '=', value: 'backend01'},
         {condition: 'OR', column: 'hostname', operator: '=', value: 'frontend01'}
       ];
+
       var expected_query = "SELECT date_trunc('second', ts) as time, " +
                            "avg(load) " +
                            "FROM \"stats\".\"nodes\" " +
@@ -60,6 +61,23 @@ describe('CrateQueryBuilder', function() {
                            "ORDER BY time ASC";
 
       var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval);
+      expect(query).to.equal(expected_query);
+
+      // Raw agg query
+      ctx.target.metricAggs = [
+        {type: 'raw', column: 'load'}
+      ];
+
+      expected_query = "SELECT ts as time, " +
+                       "load " +
+                       "FROM \"stats\".\"nodes\" " +
+                       "WHERE ts >= ? AND ts <= ? " +
+                         "AND hostname = 'backend01' " +
+                         "OR hostname = 'frontend01' " +
+                       "GROUP BY time, load " +
+                       "ORDER BY time ASC";
+
+      query = ctx.queryBuilder.buildRawAggQuery(ctx.target, ctx.interval);
       expect(query).to.equal(expected_query);
       done();
     });
@@ -119,6 +137,21 @@ describe('CrateQueryBuilder', function() {
 
       var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval);
       expect(query).to.equal(expected_query);
+
+      // Raw agg query
+      ctx.target.metricAggs = [
+        {type: 'raw', column: 'load'}
+      ];
+
+      expected_query = "SELECT ts as time, " +
+                       "load, hostname " +
+                       "FROM \"stats\".\"nodes\" " +
+                       "WHERE ts >= ? AND ts <= ? " +
+                       "GROUP BY time, load, hostname " +
+                       "ORDER BY time, hostname ASC";
+
+      query = ctx.queryBuilder.buildRawAggQuery(ctx.target, ctx.interval);
+      expect(query).to.equal(expected_query);
       done();
     });
 
@@ -175,6 +208,27 @@ describe('CrateQueryBuilder', function() {
                            "ORDER BY time ASC";
 
       var query = queryBuilder.buildAggQuery(ctx.target, ctx.interval);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
+    it('should add ad-hoc filters if it set', function(done) {
+      ctx.target.whereClauses = [];
+      ctx.adhocFilters = [
+        {key: 'region', operator: '=', value: 'west'},
+        {key: 'load', operator: '>', value: '2'}
+      ];
+
+      var expected_query = "SELECT date_trunc('second', ts) as time, " +
+                           "avg(load) " +
+                           "FROM \"stats\".\"nodes\" " +
+                           "WHERE ts >= ? AND ts <= ? " +
+                             "AND region = 'west' " +
+                             "AND load > 2 " +
+                           "GROUP BY time " +
+                           "ORDER BY time ASC";
+
+      var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters);
       expect(query).to.equal(expected_query);
       done();
     });

@@ -16,6 +16,7 @@ export class CrateDatasource {
   table: string;
   defaultTimeColumn: string;
   defaultGroupInterval: string;
+  checkQuerySource: boolean;
   queryBuilder: CrateQueryBuilder;
   CRATE_ROWS_LIMIT: number;
 
@@ -35,6 +36,7 @@ export class CrateDatasource {
     this.table = instanceSettings.jsonData.table;
     this.defaultTimeColumn = instanceSettings.jsonData.timeColumn;
     this.defaultGroupInterval = instanceSettings.jsonData.timeInterval;
+    this.checkQuerySource = instanceSettings.jsonData.checkQuerySource;
 
     this.$q = $q;
     this.backendSrv = backendSrv;
@@ -55,6 +57,7 @@ export class CrateDatasource {
     let timeFrom = Math.ceil(dateMath.parse(options.range.from));
     let timeTo = Math.ceil(dateMath.parse(options.range.to));
     let timeFilter = this.getTimeFilter(timeFrom, timeTo);
+    let scopedVars = this.setScopedVars(options.scopedVars);
 
     let queries = _.map(options.targets, target => {
       if (target.hide || (target.rawQuery && !target.query)) { return []; }
@@ -89,12 +92,12 @@ export class CrateDatasource {
         queryTarget.metricAggs = getNotRawAggs(queryTarget.metricAggs);
 
         rawAggQuery = this.queryBuilder.buildRawAggQuery(target, 0, adhocFilters, maxLimit);
-        rawAggQuery = this.templateSrv.replace(rawAggQuery, options.scopedVars, formatCrateValue);
+        rawAggQuery = this.templateSrv.replace(rawAggQuery, scopedVars, formatCrateValue);
         rawAggTarget = _.cloneDeep(target);
         rawAggTarget.metricAggs = getRawAggs(rawAggTarget.metricAggs);
       }
 
-      query = this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
+      query = this.templateSrv.replace(query, scopedVars, formatCrateValue);
 
       let queries = [
         {query: query, target: queryTarget},
@@ -187,6 +190,16 @@ export class CrateDatasource {
     return this.metricFindQuery(query);
   }
 
+  setScopedVars(scopedVars) {
+    scopedVars.crate_schema = {text: this.schema, value: `"${this.schema}"`};
+    scopedVars.crate_table = {text: this.table, value: `"${this.table}"`};
+
+    let crate_source = `"${this.schema}"."${this.table}"`;
+    scopedVars.crate_source  = {text: crate_source, value: crate_source};
+
+    return scopedVars;
+  }
+
   /**
    * Sends SQL query to Crate and returns result.
    * @param {string} query SQL query string
@@ -198,7 +211,23 @@ export class CrateDatasource {
       "stmt": query,
       "args": args
     };
+
+    if (this.checkQuerySource) {
+      // Checks schema and table and throw error if it different from configured in data source
+      this.checkSQLSource(query);
+    }
+
     return this._post('_sql', data);
+  }
+
+  checkSQLSource(query) {
+    let source_pattern = /.*[Ff][Rr][Oo][Mm]\s"?([^\.\s\"]*)"?\.?"?([^\.\s\"]*)"?/;
+    let match = query.match(source_pattern);
+    let schema = match[1];
+    let table = match[2];
+    if (schema !== this.schema || table !== this.table) {
+      throw { message: `Schema and table should be ${this.schema}.${this.table}` };
+    }
   }
 
   _request(method: string, url: string, data?: any) {
@@ -246,7 +275,8 @@ function formatCrateValue(value) {
 
 function wrapWithQuotes(value) {
   if (!isNaN(value) ||
-      value.indexOf("'") != -1) {
+      value.indexOf("'") != -1 ||
+      value.indexOf('"') != -1) {
     return value;
   } else {
     return "'" + value + "'";

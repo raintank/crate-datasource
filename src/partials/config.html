@@ -24,25 +24,27 @@
 		</div>
 	</div>
 
-	<div class="gf-form-inline">
-		<div class="gf-form">
-			<span class="gf-form-label width-12">Time column</span>
-			<input class="gf-form-input width-11" type="text"
-				ng-model='ctrl.current.jsonData.timeColumn'
-				placeholder="timestamp"
-				ng-init="" required>
-			</input>
-		</div>
+	<gf-form-switch class="gf-form"
+		label="Check Query Source"
+		tooltip="Check schema and table in SQL query and throw error if it different from configured in data source"
+		checked="ctrl.current.jsonData.checkQuerySource" label-class="width-12" switch-class="max-width-4">
+	</gf-form-switch>
+
+	<div class="gf-form">
+		<span class="gf-form-label width-12">Time column</span>
+		<input class="gf-form-input width-11" type="text"
+			ng-model='ctrl.current.jsonData.timeColumn'
+			placeholder="timestamp"
+			ng-init="" required>
+		</input>
 	</div>
 
-	<div class="gf-form-inline">
-		<div class="gf-form">
-			<span class="gf-form-label width-12">Default grouping interval</span>
-			<select class="gf-form-input width-11"
-				ng-model="ctrl.current.jsonData.timeInterval"
-				ng-options="f.value as f.name for f in ctrl.timeIntervals">
-			</select>
-		</div>
+	<div class="gf-form">
+		<span class="gf-form-label width-12">Default grouping interval</span>
+		<select class="gf-form-input width-11"
+			ng-model="ctrl.current.jsonData.timeInterval"
+			ng-options="f.value as f.name for f in ctrl.timeIntervals">
+		</select>
 	</div>
 
 </div>

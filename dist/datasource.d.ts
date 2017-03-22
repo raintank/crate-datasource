@@ -14,6 +14,7 @@ export declare class CrateDatasource {
     table: string;
     defaultTimeColumn: string;
     defaultGroupInterval: string;
+    checkQuerySource: boolean;
     queryBuilder: CrateQueryBuilder;
     CRATE_ROWS_LIMIT: number;
     constructor(instanceSettings: any, $q: any, backendSrv: any, templateSrv: any, timeSrv: any);
@@ -28,6 +29,7 @@ export declare class CrateDatasource {
     getTimeFilter(timeFrom: any, timeTo: any): string;
     getTagKeys(options: any): any;
     getTagValues(options: any): any;
+    setScopedVars(scopedVars: any): any;
     /**
      * Sends SQL query to Crate and returns result.
      * @param {string} query SQL query string
@@ -35,6 +37,7 @@ export declare class CrateDatasource {
      * @return
      */
     _sql_query(query: string, args?: any[]): any;
+    checkSQLSource(query: any): void;
     _request(method: string, url: string, data?: any): any;
     _get(url?: string): any;
     _post(url: string, data?: any): any;

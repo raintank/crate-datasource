@@ -13,7 +13,8 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
     }
     function wrapWithQuotes(value) {
         if (!isNaN(value) ||
-            value.indexOf("'") != -1) {
+            value.indexOf("'") != -1 ||
+            value.indexOf('"') != -1) {
             return value;
         }
         else {
@@ -105,6 +106,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     this.table = instanceSettings.jsonData.table;
                     this.defaultTimeColumn = instanceSettings.jsonData.timeColumn;
                     this.defaultGroupInterval = instanceSettings.jsonData.timeInterval;
+                    this.checkQuerySource = instanceSettings.jsonData.checkQuerySource;
                     this.$q = $q;
                     this.backendSrv = backendSrv;
                     this.templateSrv = templateSrv;
@@ -118,6 +120,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     var timeFrom = Math.ceil(dateMath.parse(options.range.from));
                     var timeTo = Math.ceil(dateMath.parse(options.range.to));
                     var timeFilter = this.getTimeFilter(timeFrom, timeTo);
+                    var scopedVars = this.setScopedVars(options.scopedVars);
                     var queries = lodash_1["default"].map(options.targets, function (target) {
                         if (target.hide || (target.rawQuery && !target.query)) {
                             return [];
@@ -151,11 +154,11 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                             queryTarget = lodash_1["default"].cloneDeep(target);
                             queryTarget.metricAggs = query_builder_1.getNotRawAggs(queryTarget.metricAggs);
                             rawAggQuery = _this.queryBuilder.buildRawAggQuery(target, 0, adhocFilters, maxLimit);
-                            rawAggQuery = _this.templateSrv.replace(rawAggQuery, options.scopedVars, formatCrateValue);
+                            rawAggQuery = _this.templateSrv.replace(rawAggQuery, scopedVars, formatCrateValue);
                             rawAggTarget = lodash_1["default"].cloneDeep(target);
                             rawAggTarget.metricAggs = query_builder_1.getRawAggs(rawAggTarget.metricAggs);
                         }
-                        query = _this.templateSrv.replace(query, options.scopedVars, formatCrateValue);
+                        query = _this.templateSrv.replace(query, scopedVars, formatCrateValue);
                         var queries = [
                             { query: query, target: queryTarget },
                             { query: rawAggQuery, target: rawAggTarget }
@@ -242,6 +245,13 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                     var query = this.queryBuilder.getValuesQuery(options.key, this.CRATE_ROWS_LIMIT, range);
                     return this.metricFindQuery(query);
                 };
+                CrateDatasource.prototype.setScopedVars = function (scopedVars) {
+                    scopedVars.crate_schema = { text: this.schema, value: "\"" + this.schema + "\"" };
+                    scopedVars.crate_table = { text: this.table, value: "\"" + this.table + "\"" };
+                    var crate_source = "\"" + this.schema + "\".\"" + this.table + "\"";
+                    scopedVars.crate_source = { text: crate_source, value: crate_source };
+                    return scopedVars;
+                };
                 /**
                  * Sends SQL query to Crate and returns result.
                  * @param {string} query SQL query string
@@ -254,7 +264,20 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                         "stmt": query,
                         "args": args
                     };
+                    if (this.checkQuerySource) {
+                        // Checks schema and table and throw error if it different from configured in data source
+                        this.checkSQLSource(query);
+                    }
                     return this._post('_sql', data);
+                };
+                CrateDatasource.prototype.checkSQLSource = function (query) {
+                    var source_pattern = /.*[Ff][Rr][Oo][Mm]\s"?([^\.\s\"]*)"?\.?"?([^\.\s\"]*)"?/;
+                    var match = query.match(source_pattern);
+                    var schema = match[1];
+                    var table = match[2];
+                    if (schema !== this.schema || table !== this.table) {
+                        throw { message: "Schema and table should be " + this.schema + "." + this.table };
+                    }
                 };
                 CrateDatasource.prototype._request = function (method, url, data) {
                     var options = {

@@ -147,7 +147,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                 interval = options.intervalMs;
                             }
                             else {
-                                interval = crateToMsInterval(target.timeInterval);
+                                interval = target.timeInterval;
                             }
                             // Split target into two queries (with aggs and raw data)
                             query = _this.queryBuilder.buildAggQuery(target, interval, adhocFilters, maxLimit);

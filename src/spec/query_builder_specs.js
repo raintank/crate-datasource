@@ -270,6 +270,63 @@ describe('CrateQueryBuilder', function() {
     });
   });
 
+  describe('When Group By time Interval set', function () {
+    beforeEach(function () {
+      ctx.target = {
+        metricAggs: [
+          { type: 'avg', column: 'load' }
+        ],
+        groupByColumns: [],
+        timeInterval: 'auto'
+      };
+    });
+
+    it('should use date_trunc if set to "second"', function (done) {
+      ctx.interval = 'second';
+
+      var expected_query = "SELECT date_trunc('second', ts) as time, " +
+        "avg(load) " +
+        "FROM \"stats\".\"nodes\" " +
+        "WHERE ts >= ? AND ts <= ? " +
+        "GROUP BY time " +
+        "ORDER BY time ASC LIMIT 100";
+
+      var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters, ctx.limit);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
+    it('should use date_trunc if set to "minute"', function (done) {
+      ctx.interval = 'minute';
+
+      var expected_query = "SELECT date_trunc('minute', ts) as time, " +
+        "avg(load) " +
+        "FROM \"stats\".\"nodes\" " +
+        "WHERE ts >= ? AND ts <= ? " +
+        "GROUP BY time " +
+        "ORDER BY time ASC LIMIT 100";
+
+      var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters, ctx.limit);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+
+    it('should use floor() if set to "auto_gf"', function (done) {
+      ctx.interval = 60;
+
+      var expected_query = "SELECT floor(ts/60)*60 as time, " +
+        "avg(load) " +
+        "FROM \"stats\".\"nodes\" " +
+        "WHERE ts >= ? AND ts <= ? " +
+        "GROUP BY time " +
+        "ORDER BY time ASC LIMIT 100";
+
+      var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters, ctx.limit);
+      expect(query).to.equal(expected_query);
+      done();
+    });
+  });
+
   describe('When building columns query', function() {
 
     it('should build proper Crate SQL query', function(done) {

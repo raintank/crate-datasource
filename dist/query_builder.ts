@@ -2,6 +2,9 @@
 
 import _ from 'lodash';
 
+// Maximum LIMIT value
+let MAX_LIMIT = 500000000;
+
 export class CrateQueryBuilder {
   schema: string;
   table: string;
@@ -146,6 +149,7 @@ export class CrateQueryBuilder {
     query += " ASC";
 
     if (limit) {
+      limit = Math.min(limit, MAX_LIMIT);
       query += ` LIMIT ${limit}`;
     }
 
@@ -199,6 +203,7 @@ export class CrateQueryBuilder {
     query += " ASC";
 
     if (limit) {
+      limit = Math.min(limit, MAX_LIMIT);
       query += ` LIMIT ${limit}`;
     }
 

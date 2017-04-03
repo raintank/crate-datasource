@@ -1,7 +1,7 @@
 ///<reference path="../headers/common.d.ts" />
 System.register(['lodash'], function(exports_1) {
     var lodash_1;
-    var CrateQueryBuilder;
+    var MAX_LIMIT, CrateQueryBuilder;
     function getSchemas() {
         var query = "SELECT schema_name " +
             "FROM information_schema.schemata " +
@@ -79,6 +79,8 @@ System.register(['lodash'], function(exports_1) {
                 lodash_1 = lodash_1_1;
             }],
         execute: function() {
+            // Maximum LIMIT value
+            MAX_LIMIT = 500000000;
             CrateQueryBuilder = (function () {
                 function CrateQueryBuilder(schema, table, defaultTimeColumn, defaultGroupInterval, templateSrv) {
                     this.templateSrv = templateSrv;
@@ -201,6 +203,7 @@ System.register(['lodash'], function(exports_1) {
                     }
                     query += " ASC";
                     if (limit) {
+                        limit = Math.min(limit, MAX_LIMIT);
                         query += " LIMIT " + limit;
                     }
                     return query;
@@ -246,6 +249,7 @@ System.register(['lodash'], function(exports_1) {
                     }
                     query += " ASC";
                     if (limit) {
+                        limit = Math.min(limit, MAX_LIMIT);
                         query += " LIMIT " + limit;
                     }
                     return query;

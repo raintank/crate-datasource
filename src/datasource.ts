@@ -83,7 +83,7 @@ export class CrateDatasource {
           // Use intervalMs for panel, provided by Grafana
           interval = options.intervalMs;
         } else {
-          interval = crateToMsInterval(target.timeInterval);
+          interval = target.timeInterval;
         }
 
         // Split target into two queries (with aggs and raw data)

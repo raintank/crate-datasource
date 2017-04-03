@@ -3,7 +3,8 @@
 import _ from 'lodash';
 
 // Maximum LIMIT value
-let MAX_LIMIT = 500000000;
+let MAX_LIMIT = 100000;
+let DEFAULT_LIMIT = 10000;
 
 export class CrateQueryBuilder {
   schema: string;
@@ -30,7 +31,7 @@ export class CrateQueryBuilder {
    * @param  {string}  defaultAgg     Default aggregation for values.
    * @return {string}                 SQL query.
    */
-  build(target: any, groupInterval=0, adhocFilters=[], limit=10000, defaultAgg='avg') {
+  build(target: any, groupInterval = 0, adhocFilters = [], limit = DEFAULT_LIMIT, defaultAgg='avg') {
     let query: string;
     let timeExp: string;
 
@@ -89,7 +90,7 @@ export class CrateQueryBuilder {
     return query;
   }
 
-  buildAggQuery(target: any, groupInterval=0, adhocFilters=[], limit?: number) {
+  buildAggQuery(target: any, groupInterval = 0, adhocFilters = [], limit?: number) {
     let query: string;
     let timeExp: string;
 
@@ -148,7 +149,7 @@ export class CrateQueryBuilder {
     }
     query += " ASC";
 
-    if (limit) {
+    if (limit && limit > DEFAULT_LIMIT) {
       limit = Math.min(limit, MAX_LIMIT);
       query += ` LIMIT ${limit}`;
     }
@@ -156,7 +157,7 @@ export class CrateQueryBuilder {
     return query;
   }
 
-  buildRawAggQuery(target: any, groupInterval=0, adhocFilters=[], limit?: number) {
+  buildRawAggQuery(target: any, groupInterval = 0, adhocFilters = [], limit?: number) {
     let query: string;
     let timeExp: string;
 

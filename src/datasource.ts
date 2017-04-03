@@ -87,7 +87,7 @@ export class CrateDatasource {
         }
 
         // Split target into two queries (with aggs and raw data)
-        query = this.queryBuilder.buildAggQuery(target, interval, adhocFilters, maxLimit);
+        query = this.queryBuilder.buildAggQuery(target, interval, adhocFilters);
         queryTarget = _.cloneDeep(target);
         queryTarget.metricAggs = getNotRawAggs(queryTarget.metricAggs);
 

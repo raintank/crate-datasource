@@ -150,7 +150,7 @@ System.register(['lodash', 'app/core/utils/datemath', './query_builder', './resp
                                 interval = target.timeInterval;
                             }
                             // Split target into two queries (with aggs and raw data)
-                            query = _this.queryBuilder.buildAggQuery(target, interval, adhocFilters, maxLimit);
+                            query = _this.queryBuilder.buildAggQuery(target, interval, adhocFilters);
                             queryTarget = lodash_1["default"].cloneDeep(target);
                             queryTarget.metricAggs = query_builder_1.getNotRawAggs(queryTarget.metricAggs);
                             rawAggQuery = _this.queryBuilder.buildRawAggQuery(target, 0, adhocFilters, maxLimit);

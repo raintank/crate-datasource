@@ -1,7 +1,7 @@
 ///<reference path="../headers/common.d.ts" />
 System.register(['lodash'], function(exports_1) {
     var lodash_1;
-    var MAX_LIMIT, CrateQueryBuilder;
+    var MAX_LIMIT, DEFAULT_LIMIT, CrateQueryBuilder;
     function getSchemas() {
         var query = "SELECT schema_name " +
             "FROM information_schema.schemata " +
@@ -80,7 +80,8 @@ System.register(['lodash'], function(exports_1) {
             }],
         execute: function() {
             // Maximum LIMIT value
-            MAX_LIMIT = 500000000;
+            MAX_LIMIT = 100000;
+            DEFAULT_LIMIT = 10000;
             CrateQueryBuilder = (function () {
                 function CrateQueryBuilder(schema, table, defaultTimeColumn, defaultGroupInterval, templateSrv) {
                     this.templateSrv = templateSrv;
@@ -100,7 +101,7 @@ System.register(['lodash'], function(exports_1) {
                 CrateQueryBuilder.prototype.build = function (target, groupInterval, adhocFilters, limit, defaultAgg) {
                     if (groupInterval === void 0) { groupInterval = 0; }
                     if (adhocFilters === void 0) { adhocFilters = []; }
-                    if (limit === void 0) { limit = 10000; }
+                    if (limit === void 0) { limit = DEFAULT_LIMIT; }
                     if (defaultAgg === void 0) { defaultAgg = 'avg'; }
                     var query;
                     var timeExp;
@@ -202,7 +203,7 @@ System.register(['lodash'], function(exports_1) {
                         query += ", " + target.groupByColumns.join(', ');
                     }
                     query += " ASC";
-                    if (limit) {
+                    if (limit && limit > DEFAULT_LIMIT) {
                         limit = Math.min(limit, MAX_LIMIT);
                         query += " LIMIT " + limit;
                     }

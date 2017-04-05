@@ -183,7 +183,7 @@ describe('CrateQueryBuilder', function() {
                            "WHERE ts >= ? AND ts <= ? " +
                              "AND hostname = 'backend01' " +
                            "GROUP BY time " +
-                           "ORDER BY time ASC LIMIT 100";
+                           "ORDER BY time ASC";
 
       var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters, ctx.limit);
       expect(query).to.equal(expected_query);
@@ -289,7 +289,7 @@ describe('CrateQueryBuilder', function() {
         "FROM \"stats\".\"nodes\" " +
         "WHERE ts >= ? AND ts <= ? " +
         "GROUP BY time " +
-        "ORDER BY time ASC LIMIT 100";
+        "ORDER BY time ASC";
 
       var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters, ctx.limit);
       expect(query).to.equal(expected_query);
@@ -304,7 +304,7 @@ describe('CrateQueryBuilder', function() {
         "FROM \"stats\".\"nodes\" " +
         "WHERE ts >= ? AND ts <= ? " +
         "GROUP BY time " +
-        "ORDER BY time ASC LIMIT 100";
+        "ORDER BY time ASC";
 
       var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters, ctx.limit);
       expect(query).to.equal(expected_query);
@@ -319,7 +319,7 @@ describe('CrateQueryBuilder', function() {
         "FROM \"stats\".\"nodes\" " +
         "WHERE ts >= ? AND ts <= ? " +
         "GROUP BY time " +
-        "ORDER BY time ASC LIMIT 100";
+        "ORDER BY time ASC";
 
       var query = ctx.queryBuilder.buildAggQuery(ctx.target, ctx.interval, ctx.adhocFilters, ctx.limit);
       expect(query).to.equal(expected_query);

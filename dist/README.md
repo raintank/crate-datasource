@@ -10,7 +10,12 @@ reported improving predictive analytic query performance of machine
 data by 20x more than MySQL, while reducing database hardware costs by
 75%.
 
-Here’s how CrateDB makes this possible:- **Combining SQL & Search** into a single DBMS - allowing you to process any data structure...time series, geospatial, JSON, full-text, etc.- **Distributed query innovations** - that deliver real-time SQL performance- **An auto-scaling architecture** - grow CrateDB with less DBA expertise- **Dynamic schemas, adhoc queries** - quickly adapt to data structure changes
+Here’s how CrateDB makes this possible:
+
+- **Combining SQL & Search** into a single DBMS - allowing you to process any data structure...time series, geospatial, JSON, full-text, etc.
+- **Distributed query innovations** - that deliver real-time SQL performance
+- **An auto-scaling architecture** - grow CrateDB with less DBA expertise
+- **Dynamic schemas, adhoc queries** - quickly adapt to data structure changes
 
 For these reasons and more, CrateDB is your perfect datasource for Grafana.
 
@@ -91,12 +96,6 @@ Grafana runs queries almost immediately after change and it will also auto-compl
 ![](https://raw.githubusercontent.com/raintank/crate-datasource/master/src/img/crate-datasource-error.png)
 
 The CrateDB data source for Grafana supports a great range of scalar functions and operators. To read more about them, install or scale a cluster, or even to contribute to Crate, please have a look at the [official Crate documentation](https://crate.io/docs)
-
-### History
-#### v0.1.0
-- Initial release
-- Implementation by [raintank](http://raintank.io)
-- Documentation contributions from [Crate.io](https://crate.io)
 
 ### License
 - This plugins is made available under the terms of the [Apache License, Version 2.0](https://github.com/crate/crate-datasource/blob/master/LICENSE).
